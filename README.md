@@ -17,10 +17,10 @@ The format of our version string is:
         2.4
 
     - for DEVELOPMENT builds:
-        <major>.<minor>.dev<num_branch_commits>+<branch_name>-<short_git_sha>[-dirty]
+        <major>.<minor>.dev<num_branch_commits>+<branch_name>.<short_git_sha>[-dirty]
         e.g.
-        1.1.dev34+new_shiny_feature-efa973da
-        0.1.dev7+master-gb91ffa6-dirty
+        1.1.dev34+new_shiny_feature.efa973da
+        0.1.dev7+master.gb91ffa6-dirty
 
 Typical usage in `setup.py`:
 
