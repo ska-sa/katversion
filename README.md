@@ -33,3 +33,11 @@ Typical usage in `setup.py`:
         ...
     )
 ```
+
+Typical usage from command line:
+
+```
+    # From somewhere inside your SCM, run the next command, it will print 
+    # the result to stdout.
+    $ kat-get-version.py
+```
