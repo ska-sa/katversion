@@ -5,7 +5,7 @@ Provides proper versioning for python packages.
 
 Versioning
 ----------
-This function ensures that the version string complies with
+*katversion* generates a version string for your SCM package that complies with
 [PEP440] (http://legacy.python.org/dev/peps/pep-0440/).
 
 The format of our version string is:
