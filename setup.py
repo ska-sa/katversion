@@ -31,4 +31,4 @@ setup(
     zip_safe=False,
     # Bitten Test Suite
     test_suite="nose.collector",
-    )
+)

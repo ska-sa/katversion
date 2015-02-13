@@ -131,10 +131,10 @@ def get_version_from_scm(release=False, path=None):
 
         - for DEVELOPMENT builds:
             <major>.<minor>.dev<num_branch_commits> \
-            +<branch_name>-<short_git_sha>[-dirty]
+            +<branch_name>.<short_git_sha>[-dirty]
           e.g.
-            1.1.dev34+new_shiny_feature-efa973da
-            0.1.dev7+master-gb91ffa6-dirty
+            1.1.dev34+new_shiny_feature.efa973da
+            0.1.dev7+master.gb91ffa6-dirty
 
     Parameters
     ----------

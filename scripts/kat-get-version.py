@@ -14,7 +14,7 @@ if __name__ == "__main__":
                         help='Show only the short release version.')
     parser.add_argument('-p', '--path', dest='path', action='store',
                         help='Path of SCM checkout. If not given the'
-                             ' current directory is udes.')
+                             ' current directory is used.')
     args = parser.parse_args()
 
     if args.path:
