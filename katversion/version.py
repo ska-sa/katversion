@@ -120,8 +120,7 @@ def get_version_from_file(path=None):
 def get_version_from_scm(release=False, path=None):
     """Get the current version string of this package using git.
 
-    This function ensures that the version string complies with PEP440 and
-    writes the computed version string to a file.
+    This function ensures that the version string complies with PEP440.
     The format of our version string is:
 
         - for RELEASE builds:
