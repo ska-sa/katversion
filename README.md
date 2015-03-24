@@ -21,6 +21,12 @@ The format of our version string is:
         e.g.
         1.1.dev34+new_shiny_feature.efa973da
         0.1.dev7+master.gb91ffa6-dirty
+    
+    where <major>.<minor> is derived from the latest version tag.
+    
+    To add a version tag use the `git tag` command, e.g.
+    
+        $ git tag -a 1.2 -m 'Release version 1.2'
 
 Typical usage in `setup.py`:
 
