@@ -46,4 +46,7 @@ Typical usage from command line:
     # From somewhere inside your SCM, run the next command, it will print 
     # the result to stdout.
     $ kat-get-version.py
+    
+    # Or for a release version (without all the development details)
+    $ kat-get-version.py -r
 ```
