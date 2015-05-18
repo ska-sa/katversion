@@ -213,3 +213,54 @@ def get_version(filename=None, release=False, module=None):
 
     # None of the above got a version so we will make one up based on the date.
     return date_version(scm)
+
+
+def _sane_version_list(version):
+    """Ensure the major and minor are int.
+
+    A bit of a primary school code style. But making get_version_tuple feed
+    get_version would make this go away.
+    """
+    v0 = str(version[0])
+    if v0:
+        # Test if the major is a number.
+        try:
+            v0 = v0.lstrip("v").lstrip("V")
+            # Handle the common case where tags have v before major.
+            v0 = int(v0)
+        except ValueError:
+            v0 = None
+
+    if v0 is not None:
+        version = [0, 0] + version
+    else:
+        version[0] = v0
+
+    try:
+        # Test if the minor is a number.
+        int(version[1])
+    except ValueError:
+        # Insert Minor 0.
+        version = [version[0], 0] + version[1:]
+
+    return version
+
+
+def get_version_tuple(filename=None, release=False, module=None):
+    """Return the version information as a tuple.
+
+    This uses get_version and breaks the string up. Would make more sense if the
+    version was a tuple throughout katversion.
+    """
+    major = 0
+    minor = 0
+    patch = ''  # PEP440 call's this prerelease, postrelease or devrelease
+    ver = get_version(filename, release, module)
+    if ver is not None:
+        ver_segments = _sane_version_list(ver.split("."))
+        major = ver_segments[0]
+        minor = ver_segments[1]
+        patch = ver_segments[2:]
+
+    # Return None as first field, makes substitution easier in next step.
+    return (None, major, minor, patch)
