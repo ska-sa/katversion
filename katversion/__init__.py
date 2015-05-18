@@ -1,1 +1,1 @@
-from version import get_version
+from version import get_version, build_info

@@ -24,22 +24,21 @@ def is_svn(path=None):
     return True if not stderr else False
 
 
-def check_for_error(err):
-    if err:
-        raise Exception('###\nCalled process gave error:\n%s\n###' % err)
+def run_cmd(path, *cmd):
+    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE)
+    res, stderr = proc.communicate()
+    if stderr:
+        raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
+    return res
 
 
 def get_git_version(release=False, path=None):
     """Get the GIT version."""
-    (rev_list, stderr) = Popen(['git', 'rev-list', 'HEAD'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    rev_list = run_cmd(path, 'git', 'rev-list', 'HEAD')
     num_commits_since_branch = rev_list.count('\n')
 
-    (git_desc, stderr) = Popen(['git', 'describe', '--tags', '--long',
-                                '--dirty', '--always'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    git_desc = run_cmd(path, 'git', 'describe', '--tags', '--long',
+                       '--dirty', '--always')
     git_desc_parts = git_desc.strip().split('-')
 
     if len(git_desc_parts) == 1:
@@ -47,10 +46,7 @@ def get_git_version(release=False, path=None):
     elif len(git_desc_parts) == 2:
         git_desc_parts = [0.0, 0] + git_desc_parts
 
-    (branch_name, stderr) = Popen(['git', 'rev-parse',
-                                   '--abbrev-ref', 'HEAD'], cwd=path,
-                                  stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
     branch_name = branch_name.strip()
 
     release_segment = git_desc_parts[0]
@@ -161,7 +157,8 @@ def get_version_from_module(module=None):
         # __init__ will.
         module = str(module).split('.', 1)[0]
         try:
-            return pkg_resources.require(module)[0].version
+            package = pkg_resources.get_distribution(module)
+            return package.version
         except pkg_resources.DistributionNotFound:
             # So there you have it the module is not installed.
             pass
@@ -216,3 +213,66 @@ def get_version(filename=None, release=False, module=None):
 
     # None of the above got a version so we will make one up based on the date.
     return date_version(scm)
+
+
+def _sane_version_list(version):
+    """Ensure the major and minor are int.
+    Parameters
+    ----------
+    version: list
+        version components
+
+    Returns
+    -------
+    list of version components where first two components has been sanitised.
+    """
+    v0 = str(version[0])
+    if v0:
+        # Test if the major is a number.
+        try:
+            v0 = v0.lstrip("v").lstrip("V")
+            # Handle the common case where tags have v before major.
+            v0 = int(v0)
+        except ValueError:
+            v0 = None
+
+    if v0 is None:
+        version = ['0', '0'] + version
+    else:
+        version[0] = str(v0)
+
+    try:
+        # Test if the minor is a number.
+        int(version[1])
+    except ValueError:
+        # Insert Minor 0.
+        version = [version[0], '0'] + version[1:]
+
+    return version
+
+
+def get_version_list(filename=None, release=False, module=None):
+    """Return the version information as a tuple.
+
+    This uses get_version and breaks the string up. Would make more sense if the
+    version was a tuple throughout katversion.
+    """
+    major = 0
+    minor = 0
+    patch = ''  # PEP440 call's this prerelease, postrelease or devrelease
+    ver = get_version(filename, release, module)
+    if ver is not None:
+        ver_segments = _sane_version_list(ver.split(".", 2))
+        major = ver_segments[0]
+        minor = ver_segments[1]
+        patch = "".join(ver_segments[2:])
+
+    # Return None as first field, makes substitution easier in next step.
+    return [None, major, minor, patch]
+
+
+def build_info(name, filename=None, module=None):
+    """Return the build info tuple."""
+    verlist = get_version_list(filename=filename, module=module)
+    verlist[0] = name
+    return tuple(verlist)
