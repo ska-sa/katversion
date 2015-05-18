@@ -24,22 +24,21 @@ def is_svn(path=None):
     return True if not stderr else False
 
 
-def check_for_error(err):
-    if err:
-        raise Exception('###\nCalled process gave error:\n%s\n###' % err)
+def run_cmd(path, *cmd):
+    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE)
+    res, stderr = proc.communicate()
+    if stderr:
+        raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
+    return res
 
 
 def get_git_version(release=False, path=None):
     """Get the GIT version."""
-    (rev_list, stderr) = Popen(['git', 'rev-list', 'HEAD'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    rev_list = run_cmd(path, 'git', 'rev-list', 'HEAD')
     num_commits_since_branch = rev_list.count('\n')
 
-    (git_desc, stderr) = Popen(['git', 'describe', '--tags', '--long',
-                                '--dirty', '--always'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    git_desc = run_cmd(path, 'git', 'describe', '--tags', '--long',
+                       '--dirty', '--always')
     git_desc_parts = git_desc.strip().split('-')
 
     if len(git_desc_parts) == 1:
@@ -47,10 +46,7 @@ def get_git_version(release=False, path=None):
     elif len(git_desc_parts) == 2:
         git_desc_parts = [0.0, 0] + git_desc_parts
 
-    (branch_name, stderr) = Popen(['git', 'rev-parse',
-                                   '--abbrev-ref', 'HEAD'], cwd=path,
-                                  stdout=PIPE, stderr=PIPE).communicate()
-    check_for_error(stderr)
+    branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
     branch_name = branch_name.strip()
 
     release_segment = git_desc_parts[0]
@@ -161,7 +157,8 @@ def get_version_from_module(module=None):
         # __init__ will.
         module = str(module).split('.', 1)[0]
         try:
-            return pkg_resources.require(module)[0].version
+            package = pkg_resources.get_distribution(module)
+            return package.version
         except pkg_resources.DistributionNotFound:
             # So there you have it the module is not installed.
             pass
