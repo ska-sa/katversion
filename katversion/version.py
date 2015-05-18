@@ -217,9 +217,14 @@ def get_version(filename=None, release=False, module=None):
 
 def _sane_version_list(version):
     """Ensure the major and minor are int.
+    Parameters
+    ----------
+    version: list
+        version components
 
-    A bit of a primary school code style. But making get_version_tuple feed
-    get_version would make this go away.
+    Returns
+    -------
+    list of version components where first two components has been sanitised.
     """
     v0 = str(version[0])
     if v0:
