@@ -246,7 +246,7 @@ def _sane_version_list(version):
     return version
 
 
-def get_version_tuple(filename=None, release=False, module=None):
+def get_version_list(filename=None, release=False, module=None):
     """Return the version information as a tuple.
 
     This uses get_version and breaks the string up. Would make more sense if the
@@ -260,14 +260,14 @@ def get_version_tuple(filename=None, release=False, module=None):
         ver_segments = _sane_version_list(ver.split("."))
         major = ver_segments[0]
         minor = ver_segments[1]
-        patch = ver_segments[2:]
+        patch = "".join(ver_segments[2:])
 
     # Return None as first field, makes substitution easier in next step.
-    return (None, major, minor, patch)
+    return [None, major, minor, patch]
 
 
 def build_info(name, filename=None, module=None):
     """Return the build info tuple."""
-    vertuple = get_version_tuple(filename=filename, module=module)
-    vertuple[0] = name
-    return vertuple
+    verlist = get_version_list(filename=filename, module=module)
+    verlist[0] = name
+    return tuple(verlist)
