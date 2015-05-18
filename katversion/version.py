@@ -231,17 +231,17 @@ def _sane_version_list(version):
         except ValueError:
             v0 = None
 
-    if v0 is not None:
-        version = [0, 0] + version
+    if v0 is None:
+        version = ['0', '0'] + version
     else:
-        version[0] = v0
+        version[0] = str(v0)
 
     try:
         # Test if the minor is a number.
         int(version[1])
     except ValueError:
         # Insert Minor 0.
-        version = [version[0], 0] + version[1:]
+        version = [version[0], '0'] + version[1:]
 
     return version
 
@@ -264,3 +264,10 @@ def get_version_tuple(filename=None, release=False, module=None):
 
     # Return None as first field, makes substitution easier in next step.
     return (None, major, minor, patch)
+
+
+def build_info(name, filename=None, module=None):
+    """Return the build info tuple."""
+    vertuple = get_version_tuple(filename=filename, module=module)
+    vertuple[0] = name
+    return vertuple
