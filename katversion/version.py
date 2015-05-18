@@ -257,7 +257,7 @@ def get_version_list(filename=None, release=False, module=None):
     patch = ''  # PEP440 call's this prerelease, postrelease or devrelease
     ver = get_version(filename, release, module)
     if ver is not None:
-        ver_segments = _sane_version_list(ver.split("."))
+        ver_segments = _sane_version_list(ver.split(".", 2))
         major = ver_segments[0]
         minor = ver_segments[1]
         patch = "".join(ver_segments[2:])
