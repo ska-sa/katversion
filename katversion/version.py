@@ -237,16 +237,16 @@ def _sane_version_list(version):
             v0 = None
 
     if v0 is None:
-        version = ['0', '0'] + version
+        version = [0, 0] + version
     else:
-        version[0] = str(v0)
+        version[0] = v0
 
     try:
         # Test if the minor is a number.
-        int(version[1])
+        version[1] = int(version[1])
     except ValueError:
         # Insert Minor 0.
-        version = [version[0], '0'] + version[1:]
+        version = [version[0], 0] + version[1:]
 
     return version
 
@@ -265,7 +265,7 @@ def get_version_list(filename=None, release=False, module=None):
         ver_segments = _sane_version_list(ver.split(".", 2))
         major = ver_segments[0]
         minor = ver_segments[1]
-        patch = "".join(ver_segments[2:])
+        patch = ".".join(ver_segments[2:])  # Rejoin the .
 
     # Return None as first field, makes substitution easier in next step.
     return [None, major, minor, patch]
