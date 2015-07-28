@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-from katversion import get_version
+from .katversion import get_version
 
 setup(name="katversion",
       version=get_version(),
@@ -22,7 +22,7 @@ setup(name="katversion",
           "Topic :: Software Development :: Libraries :: Python Modules"],
       platforms=["OS Independent"],
       keywords="meerkat kat ska",
-      install_requires=["unittest2>=0.5.1",
-                        "nose>=1.3, <2.0"],
+      tests_require=["unittest2>=0.5.1",
+                     "nose>=1.3, <2.0"],
       zip_safe=False,
       test_suite="nose.collector")
