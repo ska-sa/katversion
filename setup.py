@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-from .katversion import get_version
+from katversion import get_version
 
 setup(name="katversion",
       version=get_version(),
