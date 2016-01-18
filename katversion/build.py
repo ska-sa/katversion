@@ -18,8 +18,6 @@ class AddVersionToInitBuild(DistUtilsBuild):
         # Obtain package name and version (set up via setuptools metadata)
         name = self.distribution.get_name()
         version = self.distribution.get_version()
-        print "PATH", os.getcwd()
-        # from IPython import embed; embed()
         # Ensure lib build dir is there (may be absent in script-only packages)
         module_build_dir = os.path.join(self.build_lib, name)
         if not os.path.isdir(module_build_dir):
