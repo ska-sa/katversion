@@ -1,15 +1,12 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from katversion import setup
 
-from katversion import get_version
 
 setup(name="katversion",
-      version=get_version(),
       description="Provides versioning for python packages",
       author="MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
-      packages=find_packages(),
       include_package_data=True,
       scripts=["scripts/kat-get-version.py"],
       url='http://ska.ac.za/',
