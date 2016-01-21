@@ -32,6 +32,10 @@ class AddVersionToInitBuild(DistUtilsBuild):
 
 def setup(**kwargs):
     """Enhanced setuptools.setup that fixes version and does find_packages."""
+    # Nosetests insists on running module.setup(), so do nothing in that case
+    # The real setup() call will always pass in some kwargs like package name
+    if not kwargs:
+        return
     # Enforce the version obtained by katversion, overriding user setting
     version = get_version()
     if 'version' in kwargs:
