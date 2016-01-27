@@ -1,14 +1,14 @@
 """Module that customises setuptools to install __version__ inside package."""
 
 import os
-from distutils.command.build import build as DistUtilsBuild
 import warnings
+from distutils.command.build import build as DistUtilsBuild
 
 from .version import get_version
 
 
 class NewStyleDistUtilsBuild(DistUtilsBuild, object):
-    """Turn old-style distutils class into new-style one."""
+    """Turn old-style distutils class into new-style one to allow extension."""
     def run(self):
         DistUtilsBuild.run(self)
 
@@ -16,7 +16,7 @@ class NewStyleDistUtilsBuild(DistUtilsBuild, object):
 class AddVersionToInitBuild(NewStyleDistUtilsBuild):
     """Distutils build command that adds __version__ attribute to __init__.py."""
     def run(self):
-        # First run the normal build procedure
+        # First do normal build (via super, so this can call custom builds too)
         super(NewStyleDistUtilsBuild, self).run()
         # Obtain package name and version (set up via setuptools metadata)
         name = self.distribution.get_name()

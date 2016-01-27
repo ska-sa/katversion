@@ -31,11 +31,12 @@ The format of our version string is:
 Typical usage in `setup.py`:
 
 ```python
-    from katversion import get_version
+    from setuptools import setup
 
     setup(
         ...,
-        version=get_version(),
+        setup_requires=['katversion'],
+        use_katversion=True,
         ...
     )
 ```

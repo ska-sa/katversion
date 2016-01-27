@@ -2,12 +2,12 @@
 
 from setuptools import setup, find_packages
 
+# These are safe to import inside setup.py as they introduce no external deps
 from katversion import get_version
 from katversion.build import AddVersionToInitBuild
 
 
 setup(name="katversion",
-      version=get_version(),
       description="Provides versioning for python packages",
       author="MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
@@ -24,8 +24,11 @@ setup(name="katversion",
       platforms=["OS Independent"],
       keywords="meerkat kat ska",
       packages=find_packages(),
+      # Register 'use_katversion' keyword for use in participating setup.py files
       entry_points={'distutils.setup_keywords':
                     'use_katversion = katversion.build:setuptools_entry'},
+      # Handle our own version directly instead of via entry point
+      version=get_version(),
       cmdclass={'build': AddVersionToInitBuild},
       tests_require=["unittest2>=0.5.1",
                      "nose>=1.3, <2.0"],
