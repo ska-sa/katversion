@@ -1,20 +1,23 @@
 """Module that customises setuptools to install __version__ inside package."""
 
 import os
-from distutils.command.build import build as DistUtilsBuild
 import warnings
-
-from setuptools import setup as _setup
-from setuptools import find_packages
+from distutils.command.build import build as DistUtilsBuild
 
 from .version import get_version
 
 
-class AddVersionToInitBuild(DistUtilsBuild):
+class NewStyleDistUtilsBuild(DistUtilsBuild, object):
+    """Turn old-style distutils class into new-style one to allow extension."""
+    def run(self):
+        DistUtilsBuild.run(self)
+
+
+class AddVersionToInitBuild(NewStyleDistUtilsBuild):
     """Distutils build command that adds __version__ attribute to __init__.py."""
     def run(self):
-        # First run the normal build procedure
-        DistUtilsBuild.run(self)
+        # First do normal build (via super, so this can call custom builds too)
+        super(NewStyleDistUtilsBuild, self).run()
         # Obtain package name and version (set up via setuptools metadata)
         name = self.distribution.get_name()
         version = self.distribution.get_version()
@@ -41,21 +44,19 @@ class AddVersionToInitBuild(DistUtilsBuild):
             init_file.truncate()
 
 
-def setup(**kwargs):
-    """Enhanced setuptools.setup that fixes version and does find_packages."""
-    # Nosetests insists on running module.setup(), so do nothing in that case
-    # The real setup() call will always pass in some kwargs like package name
-    if not kwargs:
+def setuptools_entry(dist, keyword, value):
+    """Setuptools entry point for setting version and adding it to build."""
+    # If 'use_katversion' is False, ignore the rest
+    if not value:
         return
     # Enforce the version obtained by katversion, overriding user setting
     version = get_version()
-    if 'version' in kwargs:
+    if dist.metadata.version is not None:
         s = "Ignoring explicit version='{0}' in setup.py, using '{1}' instead"
-        warnings.warn(s.format(kwargs['version'], version))
-    kwargs['version'] = version
-    # Do standard thing to get packages if not specified
-    kwargs['packages'] = kwargs.get('packages', find_packages())
-    # Override build command
-    kwargs['cmdclass'] = {'build': AddVersionToInitBuild}
-    # Now continue with the usual setup
-    return _setup(**kwargs)
+        warnings.warn(s.format(dist.metadata.version, version))
+    dist.metadata.version = version
+    # Extend build command to bake version string into installed package
+    ExistingCustomBuild = dist.cmdclass.get('build', object)
+    class FullVersionedBuild(AddVersionToInitBuild, ExistingCustomBuild):
+        """First perform existing build and then bake in version string."""
+    dist.cmdclass['build'] = FullVersionedBuild
