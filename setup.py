@@ -7,8 +7,12 @@ from katversion import get_version
 from katversion.build import AddVersionToInitBuild
 
 
+with open('README.rst') as readme:
+    long_description = readme.read()
+
 setup(name="katversion",
       description="Provides versioning for python packages",
+      long_description=long_description,
       author="MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
       include_package_data=True,
