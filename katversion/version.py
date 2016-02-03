@@ -2,6 +2,7 @@
 
 import os
 import time
+import re
 
 from subprocess import Popen, PIPE
 import pkg_resources  # part of setuptools
@@ -30,6 +31,25 @@ def run_cmd(path, *cmd):
     if stderr:
         raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
     return res
+
+
+def _next_version(version):
+    """Turn *version* string into next version by incrementing most minor part."""
+    # Allow an arbitrary prefix followed by a traditional dotted version number
+    prefix_then_dotted_number = re.compile(r'^(.*?)([\.\d]+)$')
+    found = prefix_then_dotted_number.match(version)
+    # Give up if the string does not at least end with a number (or dot...)
+    if not found:
+        return version
+    prefix, version_numbers = found.groups()
+    version_parts = version_numbers.split('.')
+    # Try to increment the last part of dotted version (hopefully it is an int)
+    try:
+        version_parts[-1] = str(int(version_parts[-1]) + 1)
+    except ValueError:
+        return version
+    else:
+        return prefix + '.'.join(version_parts)
 
 
 def get_git_version(release=False, path=None):
@@ -64,8 +84,8 @@ def get_git_version(release=False, path=None):
         # Was: %s.dev%s+%s-%s%s
         # Now: %s.dev%s+%s.%s%s and lower. Skip the normalisation done by pip.
         version = ("%s.dev%s+%s.%s%s" %
-                   (release_segment, num_commits_since_branch, branch_name,
-                    short_commit_name.lower(), dirty_check))
+                   (_next_version(release_segment), num_commits_since_branch,
+                    branch_name, short_commit_name.lower(), dirty_check))
     return version
 
 
