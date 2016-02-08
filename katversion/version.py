@@ -52,7 +52,7 @@ def _next_version(version):
         return prefix + '.'.join(version_parts)
 
 
-def get_git_version(release=False, path=None):
+def get_git_version(path=None):
     """Get the GIT version."""
     rev_list = run_cmd(path, 'git', 'rev-list', 'HEAD')
     num_commits_since_branch = rev_list.count('\n')
@@ -70,13 +70,15 @@ def get_git_version(release=False, path=None):
     branch_name = branch_name.strip()
 
     release_segment = git_desc_parts[0]
-    # num_commits_since_tag = git_desc_parts[1]  # We ignore this value
+    num_commits_since_tag = git_desc_parts[1]
     short_commit_name = git_desc_parts[2]
-
     try:
         dirty_check = '-' + git_desc_parts[3]
     except IndexError:
         dirty_check = ''
+
+    # We are at a release if the current commit is tagged and repo is clean
+    release = num_commits_since_tag == '0' and not dirty_check
 
     if release:
         version = "%s" % (release_segment,)
@@ -89,7 +91,7 @@ def get_git_version(release=False, path=None):
     return version
 
 
-def get_svn_version(release=False, path=None):
+def get_svn_version(path=None):
     """Return the version string from svn."""
     # Unimplemented, there is probably code to do this already for SVN
     # if you know where that is place it here please.
@@ -133,7 +135,7 @@ def get_version_from_file(path=None):
                 return version
 
 
-def get_version_from_scm(release=False, path=None):
+def get_version_from_scm(path=None):
     """Get the current version string of this package using git.
 
     This function ensures that the version string complies with PEP440.
@@ -152,12 +154,6 @@ def get_version_from_scm(release=False, path=None):
             1.1.dev34+new_shiny_feature.efa973da
             0.1.dev7+master.gb91ffa6-dirty
 
-    Parameters
-    ----------
-    release : boolean
-        Whether this version is for a formal RELEASE build or
-        not (default=False)
-
     Returns
     -------
     version : boolean
@@ -165,9 +161,9 @@ def get_version_from_scm(release=False, path=None):
 
     """
     if is_git(path):
-        return 'git', get_git_version(release, path)
+        return 'git', get_git_version(path)
     elif is_svn(path):
-        return 'svn', get_svn_version(release, path)
+        return 'svn', get_svn_version(path)
     return None, None
 
 
@@ -184,7 +180,7 @@ def get_version_from_module(module=None):
             pass
 
 
-def get_version(filename=None, release=False, module=None):
+def get_version(filename=None, module=None):
     """Return the version string.
 
     Parameters
@@ -192,8 +188,6 @@ def get_version(filename=None, release=False, module=None):
 
     filename: Optional String
         A file or directory to use to find the SCM checkout path.
-    release: Optional Boolean
-        True return a short release version and not the pre-relase version.
     module: Optional String
         Usually pass in __name__, the module name.
 
@@ -222,7 +216,7 @@ def get_version(filename=None, release=False, module=None):
     if not path or not os.path.isdir(path):
         path = None
     # Check the SCM.
-    scm, version = get_version_from_scm(release, path)
+    scm, version = get_version_from_scm(path)
     if version:
         return version
 
@@ -271,7 +265,7 @@ def _sane_version_list(version):
     return version
 
 
-def get_version_list(filename=None, release=False, module=None):
+def get_version_list(filename=None, module=None):
     """Return the version information as a tuple.
 
     This uses get_version and breaks the string up. Would make more sense if the
@@ -280,7 +274,7 @@ def get_version_list(filename=None, release=False, module=None):
     major = 0
     minor = 0
     patch = ''  # PEP440 call's this prerelease, postrelease or devrelease
-    ver = get_version(filename, release, module)
+    ver = get_version(filename, module)
     if ver is not None:
         ver_segments = _sane_version_list(ver.split(".", 2))
         major = ver_segments[0]
