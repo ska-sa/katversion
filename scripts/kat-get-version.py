@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Script to get the current version string of a python package."""
+"""Script to get the current version string of a Python package."""
 
 import os
 import argparse

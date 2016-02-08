@@ -1,10 +1,10 @@
-"""Module with functions taking care of proper python package versioning."""
+"""Module with functions taking care of proper Python package versioning."""
 
 import os
 import time
 import re
-
 from subprocess import Popen, PIPE
+
 import pkg_resources  # part of setuptools
 
 
@@ -12,14 +12,14 @@ VERSION_FILE = '___version___'
 
 
 def is_git(path=None):
-    """Return true if this is a git repo."""
+    """Return True if this is a git repo."""
     (repo_dir, stderr) = Popen(['git', 'rev-parse', '--git-dir'], cwd=path,
                                stdout=PIPE, stderr=PIPE).communicate()
     return True if repo_dir else False
 
 
 def is_svn(path=None):
-    """Return true if this is a svn repo."""
+    """Return True if this is a svn repo."""
     (repo_dir, stderr) = Popen(['svn', 'info'], cwd=path,
                                stdout=PIPE, stderr=PIPE).communicate()
     return True if not stderr else False
@@ -36,6 +36,16 @@ def run_cmd(path, *cmd):
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
     return str(pkg_resources.parse_version(version))
+
+
+def date_version(scm_type=None):
+    """Generate a version string based on the SCM type and the date."""
+    dt = str(time.strftime('%Y%m%d%H%M'))
+    if scm_type:
+        version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
+    else:
+        version = "0.0+unknown." + dt
+    return normalised(version)
 
 
 def _next_version(version):
@@ -103,14 +113,39 @@ def get_svn_version(path=None):
     return date_version('svn')
 
 
-def date_version(scm_type=None):
-    """Generate a version string based on the SCM type and the date."""
-    dt = str(time.strftime('%Y%m%d%H%M'))
-    if scm_type:
-        version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
-    else:
-        version = "0.0+unknown." + dt
-    return normalised(version)
+def get_version_from_scm(path=None):
+    """Get the current version string of this package using SCM tool.
+
+    Parameters
+    ----------
+    path : None or string, optional
+        The SCM checkout path (default is current directory)
+
+    Returns
+    -------
+    version : string
+        The version string for this package
+
+    """
+    if is_git(path):
+        return 'git', get_git_version(path)
+    elif is_svn(path):
+        return 'svn', get_svn_version(path)
+    return None, None
+
+
+def get_version_from_module(module=None):
+    """Use pkg_resources to get version of installed module by name."""
+    if module is not None:
+        # Setup.py will not pass in a module, but creating __version__ from
+        # __init__ will.
+        module = str(module).split('.', 1)[0]
+        try:
+            package = pkg_resources.get_distribution(module)
+            return package.version
+        except pkg_resources.DistributionNotFound:
+            # So there you have it the module is not installed.
+            pass
 
 
 def get_version_from_file(path=None):
@@ -118,7 +153,7 @@ def get_version_from_file(path=None):
 
     Returns
     -------
-        version: String or None
+    version: String or None
 
     """
     # Get version from katversion file.
@@ -140,10 +175,10 @@ def get_version_from_file(path=None):
                 return normalised(version)
 
 
-def get_version_from_scm(path=None):
-    """Get the current version string of this package using git.
+def get_version(filename=None, module=None):
+    """Return the version string.
 
-    This function ensures that the version string complies with PEP440.
+    This function ensures that the version string complies with PEP 440.
     The format of our version string is:
 
         - for RELEASE builds:
@@ -154,56 +189,33 @@ def get_version_from_scm(path=None):
 
         - for DEVELOPMENT builds:
             <major>.<minor>.dev<num_branch_commits> \
-            +<branch_name>.<short_git_sha>[-dirty]
+            +<branch_name>.g<short_git_sha>[.dirty]
           e.g.
-            1.1.dev34+new_shiny_feature.efa973da
-            0.1.dev7+master.gb91ffa6-dirty
+            1.1.dev34+new.shiny.feature.gfa973da
+            0.1.dev7+master.gb91ffa6.dirty
 
-    Returns
-    -------
-    version : boolean
-        The version string for this package
+        - for UNKNOWN builds:
+            0.0+unknown.[<scm_type>.]<date>
+          e.g.
+            0.0+unknown.svn.201402031023
+            0.0+unknown.201602081715
 
-    """
-    if is_git(path):
-        return 'git', get_git_version(path)
-    elif is_svn(path):
-        return 'svn', get_svn_version(path)
-    return None, None
-
-
-def get_version_from_module(module=None):
-    if module is not None:
-        # Setup.py will not pass in a module, but creating __version__ from
-        # __init__ will.
-        module = str(module).split('.', 1)[0]
-        try:
-            package = pkg_resources.get_distribution(module)
-            return package.version
-        except pkg_resources.DistributionNotFound:
-            # So there you have it the module is not installed.
-            pass
-
-
-def get_version(filename=None, module=None):
-    """Return the version string.
+    The <major>.<minor> substring for development builds will be that of the
+    NEXT (minor) release, in order to allow proper Python version ordering.
 
     Parameters
     ----------
-
-    filename: Optional String
-        A file or directory to use to find the SCM checkout path.
-    module: Optional String
-        Usually pass in __name__, the module name.
+    filename: None or string, optional
+        A file or directory to use to find the SCM checkout path
+    module: None or string, optional
+        Get version via module name (e.g. __name__ variable)
 
     Returns
     -------
-
-    version: String
-        A string representation of the package version.
+    version: string
+        A string representation of the package version
 
     """
-
     # Check the module.
     version = get_version_from_module(module)
     if version:
@@ -236,14 +248,17 @@ def get_version(filename=None, module=None):
 
 def _sane_version_list(version):
     """Ensure the major and minor are int.
+
     Parameters
     ----------
     version: list
-        version components
+        Version components
 
     Returns
     -------
-    list of version components where first two components has been sanitised.
+    version: list
+        List of components where first two components has been sanitised
+
     """
     v0 = str(version[0])
     if v0:
@@ -273,12 +288,13 @@ def _sane_version_list(version):
 def get_version_list(filename=None, module=None):
     """Return the version information as a tuple.
 
-    This uses get_version and breaks the string up. Would make more sense if the
-    version was a tuple throughout katversion.
+    This uses get_version and breaks the string up. Would make more sense if
+    the version was a tuple throughout katversion.
+
     """
     major = 0
     minor = 0
-    patch = ''  # PEP440 call's this prerelease, postrelease or devrelease
+    patch = ''  # PEP440 calls this prerelease, postrelease or devrelease
     ver = get_version(filename, module)
     if ver is not None:
         ver_segments = _sane_version_list(ver.split(".", 2))
