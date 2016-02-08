@@ -1,13 +1,13 @@
 katversion
 ==========
 
-Provides proper versioning for python packages.
+Provides proper versioning for Python packages.
 
 Versioning
 ----------
 
 *katversion* generates a version string for your SCM package that
-complies with [PEP440] (http://legacy.python.org/dev/peps/pep-0440/).
+complies with [PEP 440] (http://legacy.python.org/dev/peps/pep-0440/).
 
 The format of our version string is:
 
@@ -20,12 +20,22 @@ The format of our version string is:
         2.4
 
     - for DEVELOPMENT builds:
-        <major>.<minor>.dev<num_branch_commits>+<branch_name>.<short_git_sha>[-dirty]
+        <major>.<minor>.dev<num_commits>+<branch_name>.g<short_git_sha>[.dirty]
         e.g.
-        1.1.dev34+new_shiny_feature.efa973da
-        0.1.dev7+master.gb91ffa6-dirty
+        0.2.dev34+new.shiny.feature.gfa973da
+        2.5.dev7+master.gb91ffa6.dirty
 
-    where <major>.<minor> is derived from the latest version tag.
+    - for UNKNOWN builds:
+        0.0+unknown.[<scm_type>.]<timestamp>
+        e.g.
+        0.0+unknown.svn.201402031023
+        0.0+unknown.201602081715
+
+    where <major>.<minor> is derived from the latest version tag and
+    <num_commits> is the total number of commits on the development branch.
+
+    The <major>.<minor> substring for development builds will be that of the
+    NEXT (minor) release, in order to allow proper Python version ordering.
 
     To add a version tag use the `git tag` command, e.g.
 
@@ -48,10 +58,6 @@ Typical usage from command line:
 
 ::
 
-        # From somewhere inside your SCM, run the next command, it will print 
-        # the result to stdout.
+        # From inside your SCM subdirectory, run the following command
+        # which will print the result to stdout:
         $ kat-get-version.py
-        
-        # Or for a release version (without all the development details)
-        $ kat-get-version.py -r
-
