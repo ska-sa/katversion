@@ -33,6 +33,11 @@ def run_cmd(path, *cmd):
     return res
 
 
+def normalised(version):
+    """Normalise a version string according to PEP 440, if possible."""
+    return str(pkg_resources.parse_version(version))
+
+
 def _next_version(version):
     """Turn *version* string into next version by incrementing most minor part."""
     # Allow an arbitrary prefix followed by a traditional dotted version number
@@ -67,13 +72,13 @@ def get_git_version(path=None):
         git_desc_parts = [0.0, 0] + git_desc_parts
 
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
-    branch_name = branch_name.strip()
+    branch_name = branch_name.strip().lower()
 
     release_segment = git_desc_parts[0]
     num_commits_since_tag = git_desc_parts[1]
     short_commit_name = git_desc_parts[2]
     try:
-        dirty_check = '-' + git_desc_parts[3]
+        dirty_check = '.' + git_desc_parts[3]
     except IndexError:
         dirty_check = ''
 
@@ -84,11 +89,11 @@ def get_git_version(path=None):
         version = "%s" % (release_segment,)
     else:
         # Was: %s.dev%s+%s-%s%s
-        # Now: %s.dev%s+%s.%s%s and lower. Skip the normalisation done by pip.
+        # Now: %s.dev%s+%s.%s%s and lower. Still to be normalised.
         version = ("%s.dev%s+%s.%s%s" %
                    (_next_version(release_segment), num_commits_since_branch,
                     branch_name, short_commit_name.lower(), dirty_check))
-    return version
+    return normalised(version)
 
 
 def get_svn_version(path=None):
@@ -102,10 +107,10 @@ def date_version(scm_type=None):
     """Generate a version string based on the SCM type and the date."""
     dt = str(time.strftime('%Y%m%d%H%M'))
     if scm_type:
-        version = "0.0+unknown.{0}-{1}".format(scm_type, dt)
+        version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
     else:
         version = "0.0+unknown." + dt
-    return version
+    return normalised(version)
 
 
 def get_version_from_file(path=None):
@@ -132,7 +137,7 @@ def get_version_from_file(path=None):
         with open(filename) as fh:
             version = fh.readline().strip()
             if version:
-                return version
+                return normalised(version)
 
 
 def get_version_from_scm(path=None):
