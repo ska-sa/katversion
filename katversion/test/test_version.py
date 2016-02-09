@@ -13,3 +13,11 @@ class TestVersion(unittest.TestCase):
         for ver, test_verlist in t_ver.items():
             verlist = kv._sane_version_list(ver.split(".", 2))
             self.assertEquals(verlist, test_verlist)
+
+    def test_next_version(self):
+        t_ver = {"v0.1.2": "v0.1.3",
+                 "karoocamv9": "karoocamv10",
+                 "1.2": "1.3"}
+        for ver, test_nextver in t_ver.items():
+            nextver = kv._next_version(ver)
+            self.assertEquals(nextver, test_nextver)
