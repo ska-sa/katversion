@@ -50,6 +50,8 @@ def date_version(scm_type=None):
 
 def _next_version(version):
     """Turn *version* string into next version by incrementing most minor part."""
+    # Make sure version parameter is a string
+    version = str(version)
     # Allow an arbitrary prefix followed by a traditional dotted version number
     prefix_then_dotted_number = re.compile(r'^(.*?)([\.\d]+)$')
     found = prefix_then_dotted_number.match(version)
