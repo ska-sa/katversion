@@ -81,6 +81,8 @@ def get_git_version(path=None):
     # If repo contains no tags, start version off at 0.0 (but can't be release)
     if len(git_desc_parts) < 3:
         git_desc_parts = ['0.0', '1'] + git_desc_parts
+        # With no tags 'git describe' prints hash without 'g' in front - add it
+        git_desc_parts[2] = 'g' + git_desc_parts[2]
 
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
     branch_name = branch_name.strip().lower()
