@@ -41,7 +41,7 @@ The format of our version string is:
 
         $ git tag -a 1.2 -m 'Release version 1.2'
 
-Typical usage in ``setup.py``:
+Typical usage in ``setup.py`` (handles installed packages):
 
 .. code:: python
 
@@ -53,6 +53,21 @@ Typical usage in ``setup.py``:
             use_katversion=True,
             ...
         )
+
+Typical usage in ``mypackage/__init__.py`` (handles local packages):
+
+.. code:: python
+
+        # BEGIN VERSION CHECK
+        # Get package version when locally imported from repo or via -e develop install
+        try:
+            import katversion as _katversion
+        except ImportError:
+            import time as _time
+            __version__ = "0.0+unknown.{}".format(_time.strftime('%Y%m%d%H%M'))
+        else:
+            __version__ = _katversion.get_version(__path__[0])
+        # END VERSION CHECK
 
 Typical usage from command line:
 
