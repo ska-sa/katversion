@@ -6,6 +6,11 @@ import re
 from subprocess import Popen, PIPE
 
 import pkg_resources  # part of setuptools
+try:
+    # This requires setuptools >= 12
+    from pkg_resources import parse_version, SetuptoolsVersion
+except ImportError:
+    parse_version = SetuptoolsVersion = None
 
 
 VERSION_FILE = '___version___'
@@ -35,7 +40,22 @@ def run_cmd(path, *cmd):
 
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
-    return str(pkg_resources.parse_version(version))
+    if parse_version:
+        # Let setuptools (>= 12) do the normalisation
+        return str(parse_version(version))
+    else:
+        # Homegrown normalisation for older setuptools (< 12)
+        public, sep, local = version.lower().partition('+')
+        # Remove leading 'v' from public version
+        if len(public) >= 2:
+            if public[0] == 'v' and public[1] in '0123456789':
+                public = public[1:]
+        # Turn all characters except alphanumerics into periods in local version
+        alphanum_or_period = ['.'] * 256
+        for c in 'abcdefghijklmnopqrstuvwxyz0123456789':
+            alphanum_or_period[ord(c)] = c
+        local = local.translate(''.join(alphanum_or_period))
+        return public + sep + local
 
 
 def date_version(scm_type=None):
