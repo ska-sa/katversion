@@ -7,23 +7,27 @@ from katversion import get_version
 from katversion.build import AddVersionToInitBuild, AddVersionToInitSdist
 
 
+with open('README.rst') as readme:
+    long_description = readme.read()
+
 setup(name="katversion",
       description="Provides versioning for python packages",
+      long_description=long_description,
       author="MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
+      packages=find_packages(),
       include_package_data=True,
       scripts=["scripts/kat-get-version.py"],
-      url='http://ska.ac.za/',
+      url='https://github.com/ska-sa/katversion',
       classifiers=[
           "Development Status :: 3 - Alpha",
           "Intended Audience :: Developers",
           "License :: Other/Proprietary License",
           "Operating System :: OS Independent",
-          "Programming Language :: Python",
+          "Programming Language :: Python :: 2",
           "Topic :: Software Development :: Libraries :: Python Modules"],
       platforms=["OS Independent"],
       keywords="meerkat kat ska",
-      packages=find_packages(),
       # Register 'use_katversion' keyword for use in participating setup.py files
       entry_points={'distutils.setup_keywords':
                     'use_katversion = katversion.build:setuptools_entry'},
