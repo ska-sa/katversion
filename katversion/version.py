@@ -6,6 +6,11 @@ import re
 from subprocess import Popen, PIPE
 
 import pkg_resources  # part of setuptools
+try:
+    # This requires setuptools >= 12
+    from pkg_resources import parse_version, SetuptoolsVersion
+except ImportError:
+    parse_version = SetuptoolsVersion = None
 
 
 VERSION_FILE = '___version___'
@@ -33,11 +38,6 @@ def run_cmd(path, *cmd):
     return res
 
 
-def normalised(version):
-    """Normalise a version string according to PEP 440, if possible."""
-    return str(pkg_resources.parse_version(version))
-
-
 def date_version(scm_type=None):
     """Generate a version string based on the SCM type and the date."""
     dt = str(time.strftime('%Y%m%d%H%M'))
@@ -45,7 +45,7 @@ def date_version(scm_type=None):
         version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
     else:
         version = "0.0+unknown." + dt
-    return normalised(version)
+    return version
 
 
 def _next_version(version):
@@ -81,6 +81,8 @@ def get_git_version(path=None):
     # If repo contains no tags, start version off at 0.0 (but can't be release)
     if len(git_desc_parts) < 3:
         git_desc_parts = ['0.0', '1'] + git_desc_parts
+        # With no tags 'git describe' prints hash without 'g' in front - add it
+        git_desc_parts[2] = 'g' + git_desc_parts[2]
 
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
     branch_name = branch_name.strip().lower()
@@ -104,7 +106,7 @@ def get_git_version(path=None):
         version = ("%s.dev%s+%s.%s%s" %
                    (_next_version(release_segment), num_commits_since_branch,
                     branch_name, short_commit_name.lower(), dirty_check))
-    return normalised(version)
+    return version
 
 
 def get_svn_version(path=None):
@@ -173,7 +175,27 @@ def get_version_from_file(path=None):
         with open(filename) as fh:
             version = fh.readline().strip()
             if version:
-                return normalised(version)
+                return version
+
+
+def normalised(version):
+    """Normalise a version string according to PEP 440, if possible."""
+    if parse_version:
+        # Let setuptools (>= 12) do the normalisation
+        return str(parse_version(version))
+    else:
+        # Homegrown normalisation for older setuptools (< 12)
+        public, sep, local = version.lower().partition('+')
+        # Remove leading 'v' from public version
+        if len(public) >= 2:
+            if public[0] == 'v' and public[1] in '0123456789':
+                public = public[1:]
+        # Turn all characters except alphanumerics into periods in local version
+        alphanum_or_period = ['.'] * 256
+        for c in 'abcdefghijklmnopqrstuvwxyz0123456789':
+            alphanum_or_period[ord(c)] = c
+        local = local.translate(''.join(alphanum_or_period))
+        return public + sep + local
 
 
 def get_version(filename=None, module=None):
@@ -220,7 +242,7 @@ def get_version(filename=None, module=None):
     # Check the module.
     version = get_version_from_module(module)
     if version:
-        return version
+        return normalised(version)
 
     path = ''
     if filename:
@@ -236,15 +258,15 @@ def get_version(filename=None, module=None):
     # Check the SCM.
     scm, version = get_version_from_scm(path)
     if version:
-        return version
+        return normalised(version)
 
     # Check if there is a katversion file.
     version = get_version_from_file(path)
     if version:
-        return version
+        return normalised(version)
 
     # None of the above got a version so we will make one up based on the date.
-    return date_version(scm)
+    return normalised(date_version(scm))
 
 
 def _sane_version_list(version):
