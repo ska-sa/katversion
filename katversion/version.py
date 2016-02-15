@@ -54,8 +54,8 @@ def get_git_version(path=None):
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
     branch_name = branch_name.strip()
     # Determine whether working copy is dirty (i.e. contains modified files)
-    new_and_improved_files = run_cmd(path, 'git', 'status', '--porcelain')
-    dirty = '.dirty' if new_and_improved_files else ''
+    mods = run_cmd(path, 'git', 'status', '--porcelain', '--untracked-files=no')
+    dirty = '.dirty' if mods else ''
     # Get a list of all commits on branch, with corresponding branch/tag refs
     # Each line looks something like: "d3e4d42 (HEAD, master, tag: v0.1)"
     git_output = run_cmd(path, 'git', 'log', '--pretty="%h%d"')
