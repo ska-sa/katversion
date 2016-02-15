@@ -48,64 +48,50 @@ def date_version(scm_type=None):
     return version
 
 
-def _next_version(version):
-    """Turn *version* string into next version by incrementing most minor part."""
-    # Make sure version parameter is a string
-    version = str(version)
-    # Allow an arbitrary prefix followed by a traditional dotted version number
-    prefix_then_dotted_number = re.compile(r'^(.*?)([\.\d]+)$')
-    found = prefix_then_dotted_number.match(version)
-    # Give up if the string does not at least end with a number (or dot...)
-    if not found:
-        return version
-    prefix, version_numbers = found.groups()
-    version_parts = version_numbers.split('.')
-    # Try to increment the last part of dotted version (hopefully it is an int)
-    try:
-        version_parts[-1] = str(int(version_parts[-1]) + 1)
-    except ValueError:
-        return version
-    else:
-        return prefix + '.'.join(version_parts)
-
-
 def get_git_version(path=None):
     """Get the GIT version."""
-    rev_list = run_cmd(path, 'git', 'rev-list', 'HEAD')
-    num_commits_since_branch = rev_list.count('\n')
-
-    git_desc = run_cmd(path, 'git', 'describe', '--tags', '--long',
-                       '--dirty', '--always')
-    git_desc_parts = git_desc.strip().split('-')
-
-    # If repo contains no tags, start version off at 0.0 (but can't be release)
-    if len(git_desc_parts) < 3:
-        git_desc_parts = ['0.0', '1'] + git_desc_parts
-        # With no tags 'git describe' prints hash without 'g' in front - add it
-        git_desc_parts[2] = 'g' + git_desc_parts[2]
-
+    # Get name of current branch (or 'HEAD' for a detached HEAD)
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
-    branch_name = branch_name.strip().lower()
-
-    release_segment = git_desc_parts[0]
-    num_commits_since_tag = git_desc_parts[1]
-    short_commit_name = git_desc_parts[2]
-    try:
-        dirty_check = '.' + git_desc_parts[3]
-    except IndexError:
-        dirty_check = ''
-
-    # We are at a release if the current commit is tagged and repo is clean
-    release = num_commits_since_tag == '0' and not dirty_check
-
-    if release:
-        version = "%s" % (release_segment,)
+    branch_name = branch_name.strip()
+    # Determine whether working copy is dirty (i.e. contains modified files)
+    new_and_improved_files = run_cmd(path, 'git', 'status', '--porcelain')
+    dirty = '.dirty' if new_and_improved_files else ''
+    # Get a list of all commits on branch, with corresponding branch/tag refs
+    # Each line looks something like: "d3e4d42 (HEAD, master, tag: v0.1)"
+    git_output = run_cmd(path, 'git', 'log', '--pretty="%h%d"')
+    commits = git_output.strip().replace('"', '').split('\n')
+    num_commits_since_branch = len(commits)
+    # Short hash of the latest commit
+    short_commit_name = commits[0].partition(' ')[0]
+    # A valid version is a sequence of dotted numbers optionally prefixed by 'v'
+    valid_version = re.compile(r'^v?([\.\d]+)$')
+    def tagged_version(commit):
+        """First tag on commit that is valid version, as a list of numbers."""
+        refs = commit.partition(' ')[2]
+        for ref in refs.lstrip('(').rstrip(')').split(', '):
+            if ref.startswith('tag: '):
+                tag = ref[5:].lower()
+                found = valid_version.match(tag)
+                if found:
+                    return [int(v) for v in found.group(1).split('.') if v]
+        return []
+    # Walk back along branch and find first valid tagged version (or use 0.0)
+    for commit in commits:
+        version_numbers = tagged_version(commit)
+        if version_numbers:
+            break
     else:
-        # Was: %s.dev%s+%s-%s%s
-        # Now: %s.dev%s+%s.%s%s and lower. Still to be normalised.
-        version = ("%s.dev%s+%s.%s%s" %
-                   (_next_version(release_segment), num_commits_since_branch,
-                    branch_name, short_commit_name.lower(), dirty_check))
+        version_numbers = [0, 0]
+    # It is a release if the current commit has a version tag (and dir is clean)
+    release = (commit == commits[0]) and not dirty
+    if not release:
+        # We are working towards the next (minor) release according to PEP 440
+        version_numbers[-1] += 1
+    version = '.'.join([str(v) for v in version_numbers])
+    if not release:
+        # Development version contains extra embellishments
+        version = ("%s.dev%d+%s.%s%s" % (version, num_commits_since_branch,
+                                         branch_name, short_commit_name, dirty))
     return version
 
 
