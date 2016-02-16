@@ -18,16 +18,22 @@ VERSION_FILE = '___version___'
 
 def is_git(path=None):
     """Return True if this is a git repo."""
-    (repo_dir, stderr) = Popen(['git', 'rev-parse', '--git-dir'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    return True if repo_dir else False
+    try:
+        (repo_dir, stderr) = Popen(['git', 'rev-parse', '--git-dir'], cwd=path,
+                                   stdout=PIPE, stderr=PIPE).communicate()
+        return True if repo_dir else False
+    except OSError:
+        return False
 
 
 def is_svn(path=None):
     """Return True if this is a svn repo."""
-    (repo_dir, stderr) = Popen(['svn', 'info'], cwd=path,
-                               stdout=PIPE, stderr=PIPE).communicate()
-    return True if not stderr else False
+    try:
+        (repo_dir, stderr) = Popen(['svn', 'info'], cwd=path,
+                                   stdout=PIPE, stderr=PIPE).communicate()
+        return True if not stderr else False
+    except OSError:
+        return False
 
 
 def run_cmd(path, *cmd):
