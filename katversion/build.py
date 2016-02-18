@@ -3,7 +3,7 @@
 import sys
 import os
 import warnings
-from distutils.command.build import build as DistUtilsBuild
+from distutils.command.build_py import build_py as DistUtilsBuildPy
 # Ensure we override the correct sdist as setuptools monkey-patches distutils
 if "setuptools" in sys.modules:
     from setuptools.command.sdist import log, sdist as OriginalSdist
@@ -39,17 +39,17 @@ def patch_init_py(base_dir, name, version):
         init_file.truncate()
 
 
-class NewStyleDistUtilsBuild(DistUtilsBuild, object):
+class NewStyleDistUtilsBuildPy(DistUtilsBuildPy, object):
     """Turn old-style distutils class into new-style one to allow extension."""
     def run(self):
-        DistUtilsBuild.run(self)
+        DistUtilsBuildPy.run(self)
 
 
-class AddVersionToInitBuild(NewStyleDistUtilsBuild):
-    """Distutils build command that adds __version__ attribute to __init__.py."""
+class AddVersionToInitBuildPy(NewStyleDistUtilsBuildPy):
+    """Distutils build_py command that adds __version__ attr to __init__.py."""
     def run(self):
         # First do normal build (via super, so this can call custom builds too)
-        super(NewStyleDistUtilsBuild, self).run()
+        super(NewStyleDistUtilsBuildPy, self).run()
         # Obtain package name and version (set up via setuptools metadata)
         name = self.distribution.get_name()
         version = self.distribution.get_version()
@@ -64,7 +64,7 @@ class NewStyleSdist(OriginalSdist, object):
 
 
 class AddVersionToInitSdist(NewStyleSdist):
-    """Distutils sdist command that adds __version__ attribute to __init__.py."""
+    """Distutils sdist command that adds __version__ attr to __init__.py."""
     def make_release_tree(self, base_dir, files):
         # First do normal sdist (via super, so this can call custom sdists too)
         super(NewStyleSdist, self).make_release_tree(base_dir, files)
@@ -81,7 +81,7 @@ class AddVersionToInitSdist(NewStyleSdist):
 
 
 def setuptools_entry(dist, keyword, value):
-    """Setuptools entry point for setting version and adding it to build/sdist."""
+    """Setuptools entry point for setting version and baking it into package."""
     # If 'use_katversion' is False, ignore the rest
     if not value:
         return
@@ -91,11 +91,11 @@ def setuptools_entry(dist, keyword, value):
         s = "Ignoring explicit version='{0}' in setup.py, using '{1}' instead"
         warnings.warn(s.format(dist.metadata.version, version))
     dist.metadata.version = version
-    # Extend build command to bake version string into installed package
-    ExistingCustomBuild = dist.cmdclass.get('build', object)
-    class KatVersionBuild(AddVersionToInitBuild, ExistingCustomBuild):
-        """First perform existing build and then bake in version string."""
-    dist.cmdclass['build'] = KatVersionBuild
+    # Extend build_py command to bake version string into installed package
+    ExistingCustomBuildPy = dist.cmdclass.get('build_py', object)
+    class KatVersionBuildPy(AddVersionToInitBuildPy, ExistingCustomBuildPy):
+        """First perform existing build_py and then bake in version string."""
+    dist.cmdclass['build_py'] = KatVersionBuildPy
     # Extend sdist command to bake version string into source package
     ExistingCustomSdist = dist.cmdclass.get('sdist', object)
     class KatVersionSdist(AddVersionToInitSdist, ExistingCustomSdist):
