@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 # These are safe to import inside setup.py as they introduce no external deps
 from katversion import get_version
-from katversion.build import AddVersionToInitBuild, AddVersionToInitSdist
+from katversion.build import AddVersionToInitBuildPy, AddVersionToInitSdist
 
 
 with open('README.rst') as readme:
@@ -33,7 +33,7 @@ setup(name="katversion",
                     'use_katversion = katversion.build:setuptools_entry'},
       # Handle our own version directly instead of via entry point
       version=get_version(),
-      cmdclass={'build': AddVersionToInitBuild,
+      cmdclass={'build_py': AddVersionToInitBuildPy,
                 'sdist': AddVersionToInitSdist},
       tests_require=["unittest2>=0.5.1",
                      "nose>=1.3, <2.0"],
