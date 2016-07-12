@@ -53,7 +53,8 @@ def is_svn(path=None):
 
 
 def run_cmd(path, *cmd):
-    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE)
+    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE,
+                 universal_newlines=True)
     res, stderr = proc.communicate()
     if stderr:
         raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
