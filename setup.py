@@ -27,9 +27,9 @@ with open('README.rst') as readme:
     long_description = readme.read()
 
 setup(name="katversion",
-      description="Provides versioning for python packages",
+      description="Provides proper versioning for Python packages",
       long_description=long_description,
-      author="MeerKAT CAM Team",
+      author="The MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
       packages=find_packages(),
       include_package_data=True,
@@ -37,14 +37,16 @@ setup(name="katversion",
       url='https://github.com/ska-sa/katversion',
       license="BSD",
       classifiers=[
-          "Development Status :: 3 - Alpha",
+          "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: BSD License",
           "Operating System :: OS Independent",
           "Programming Language :: Python :: 2",
+          "Topic :: Software Development :: Version Control",
+          "Topic :: System :: Software Distribution",
           "Topic :: Software Development :: Libraries :: Python Modules"],
       platforms=["OS Independent"],
-      keywords="meerkat kat ska",
+      keywords="versioning meerkat ska",
       # Register 'use_katversion' keyword for use in participating setup.py files
       entry_points={'distutils.setup_keywords':
                     'use_katversion = katversion.build:setuptools_entry'},
