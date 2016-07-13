@@ -41,7 +41,7 @@ def run_cmd(path, *cmd):
     return res
 
 
-def is_git(path=None):
+def is_git(path):
     """Return True if this is a git repo."""
     try:
         repo_dir = run_cmd(path, 'git', 'rev-parse', '--git-dir')
@@ -50,7 +50,7 @@ def is_git(path=None):
         return False
 
 
-def is_svn(path=None):
+def is_svn(path):
     """Return True if this is an svn repo."""
     try:
         repo_dir = run_cmd(path, 'svn', 'info')
@@ -69,7 +69,7 @@ def date_version(scm=None):
     return version
 
 
-def get_git_version(path=None):
+def get_git_version(path):
     """Get the GIT version."""
     # Get name of current branch (or 'HEAD' for a detached HEAD)
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
@@ -116,7 +116,7 @@ def get_git_version(path=None):
     return version
 
 
-def get_svn_version(path=None):
+def get_svn_version(path):
     """Return the version string from svn."""
     # Unimplemented, there is probably code to do this already for SVN
     # if you know where that is place it here please.
@@ -158,22 +158,17 @@ def get_version_from_module(module):
             pass
 
 
-def get_version_from_file(path=None):
+def get_version_from_file(path):
     """Find the VERSION_FILE and return its contents.
 
     Returns
     -------
-    version: String or None
+    version : string or None
 
     """
-    # Get version from katversion file.
-    if path is None:
-        path = os.getcwd()
-
-    version = ''
     filename = os.path.join(path, VERSION_FILE)
     if not os.path.isfile(filename):
-        # Look in one directory down.
+        # Look in the parent directory of path instead.
         filename = os.path.join(os.path.dirname(path), VERSION_FILE)
         if not os.path.isfile(filename):
             filename = ''
@@ -235,10 +230,12 @@ def get_version(path=None, module=None):
 
     Parameters
     ----------
-    path: None or string, optional
+    path : None or string, optional
         A file or directory to use to find the SCM or sdist checkout path
-    module: None or string, optional
-        Get version via module name (e.g. __name__ variable)
+        (default is the current working directory)
+    module : None or string, optional
+        Get version via module name (e.g. __name__ variable), which takes
+        precedence over path if provided (ignore otherwise)
 
     Returns
     -------
@@ -251,12 +248,14 @@ def get_version(path=None, module=None):
     if version:
         return normalised(version)
 
-    if path:
-        path = os.path.abspath(path)
-        if os.path.exists(path) and not os.path.isdir(path):
-            path = os.path.dirname(path)
-    if not path or not os.path.isdir(path):
-        path = None
+    # Turn path into a valid directory (default is current directory)
+    if path is None:
+        path = os.getcwd()
+    path = os.path.abspath(path)
+    if os.path.exists(path) and not os.path.isdir(path):
+        path = os.path.dirname(path)
+    if not os.path.isdir(path):
+        raise ValueError('No such package source directory: %r' % (path,))
 
     # Check the SCM.
     scm, version = get_version_from_scm(path)
