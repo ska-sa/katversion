@@ -37,4 +37,4 @@ if __name__ == "__main__":
         # If path was not given us the current working directory. This is the
         # way git smudge uses this file.
         path = os.getcwd()
-    print get_version(path)
+    print(get_version(path))
