@@ -32,33 +32,33 @@ except ImportError:
 VERSION_FILE = '___version___'
 
 
-def is_git(path=None):
-    """Return True if this is a git repo."""
-    try:
-        (repo_dir, stderr) = Popen(['git', 'rev-parse', '--git-dir'], cwd=path,
-                                   stdout=PIPE, stderr=PIPE).communicate()
-        return True if repo_dir else False
-    except OSError:
-        return False
-
-
-def is_svn(path=None):
-    """Return True if this is a svn repo."""
-    try:
-        (repo_dir, stderr) = Popen(['svn', 'info'], cwd=path,
-                                   stdout=PIPE, stderr=PIPE).communicate()
-        return True if not stderr else False
-    except OSError:
-        return False
-
-
 def run_cmd(path, *cmd):
     proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE,
                  universal_newlines=True)
     res, stderr = proc.communicate()
     if stderr:
-        raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
+        raise RuntimeError('###\nCalled process gave error:\n%s\n###' % stderr)
     return res
+
+
+def is_git(path=None):
+    """Return True if this is a git repo."""
+    try:
+        repo_dir = run_cmd(path, 'git', 'rev-parse', '--git-dir')
+    except OSError:
+        return False
+    except RuntimeError:
+        pass
+    return True if repo_dir else False
+
+
+def is_svn(path=None):
+    """Return True if this is a svn repo."""
+    try:
+        repo_dir = run_cmd(path, 'svn', 'info')
+    except (OSError, RuntimeError):
+        return False
+    return True
 
 
 def date_version(scm_type=None):
