@@ -45,20 +45,18 @@ def is_git(path=None):
     """Return True if this is a git repo."""
     try:
         repo_dir = run_cmd(path, 'git', 'rev-parse', '--git-dir')
-    except OSError:
+        return True if repo_dir else False
+    except (OSError, RuntimeError):
         return False
-    except RuntimeError:
-        pass
-    return True if repo_dir else False
 
 
 def is_svn(path=None):
-    """Return True if this is a svn repo."""
+    """Return True if this is an svn repo."""
     try:
         repo_dir = run_cmd(path, 'svn', 'info')
+        return True
     except (OSError, RuntimeError):
         return False
-    return True
 
 
 def date_version(scm_type=None):
