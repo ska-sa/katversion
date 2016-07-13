@@ -59,11 +59,11 @@ def is_svn(path=None):
         return False
 
 
-def date_version(scm_type=None):
+def date_version(scm=None):
     """Generate a version string based on the SCM type and the date."""
     dt = str(time.strftime('%Y%m%d%H%M'))
-    if scm_type:
-        version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
+    if scm:
+        version = "0.0+unknown.{0}.{1}".format(scm, dt)
     else:
         version = "0.0+unknown." + dt
     return version
@@ -144,7 +144,7 @@ def get_version_from_scm(path=None):
     return None, None
 
 
-def get_version_from_module(module=None):
+def get_version_from_module(module):
     """Use pkg_resources to get version of installed module by name."""
     if module is not None:
         # Setup.py will not pass in a module, but creating __version__ from
@@ -205,7 +205,7 @@ def normalised(version):
         return public + sep + local
 
 
-def get_version(filename=None, module=None):
+def get_version(path=None, module=None):
     """Return the version string.
 
     This function ensures that the version string complies with PEP 440.
@@ -235,8 +235,8 @@ def get_version(filename=None, module=None):
 
     Parameters
     ----------
-    filename: None or string, optional
-        A file or directory to use to find the SCM checkout path
+    path: None or string, optional
+        A file or directory to use to find the SCM or sdist checkout path
     module: None or string, optional
         Get version via module name (e.g. __name__ variable)
 
@@ -246,28 +246,24 @@ def get_version(filename=None, module=None):
         A string representation of the package version
 
     """
-    # Check the module.
+    # Check the module option first.
     version = get_version_from_module(module)
     if version:
         return normalised(version)
 
-    path = ''
-    if filename:
-        filename = os.path.abspath(filename)
-    if filename and os.path.exists(filename):
-        if os.path.isdir(filename):
-            path = filename
-        else:
-            path = os.path.dirname(filename)
-
+    if path:
+        path = os.path.abspath(path)
+        if os.path.exists(path) and not os.path.isdir(path):
+            path = os.path.dirname(path)
     if not path or not os.path.isdir(path):
         path = None
+
     # Check the SCM.
     scm, version = get_version_from_scm(path)
     if version:
         return normalised(version)
 
-    # Check if there is a katversion file.
+    # Check if there is a katversion file in the given path.
     version = get_version_from_file(path)
     if version:
         return normalised(version)
@@ -315,7 +311,7 @@ def _sane_version_list(version):
     return version
 
 
-def get_version_list(filename=None, module=None):
+def get_version_list(path=None, module=None):
     """Return the version information as a tuple.
 
     This uses get_version and breaks the string up. Would make more sense if
@@ -325,7 +321,7 @@ def get_version_list(filename=None, module=None):
     major = 0
     minor = 0
     patch = ''  # PEP440 calls this prerelease, postrelease or devrelease
-    ver = get_version(filename, module)
+    ver = get_version(path, module)
     if ver is not None:
         ver_segments = _sane_version_list(ver.split(".", 2))
         major = ver_segments[0]
@@ -336,8 +332,8 @@ def get_version_list(filename=None, module=None):
     return [None, major, minor, patch]
 
 
-def build_info(name, filename=None, module=None):
+def build_info(name, path=None, module=None):
     """Return the build info tuple."""
-    verlist = get_version_list(filename=filename, module=module)
+    verlist = get_version_list(path, module)
     verlist[0] = name
     return tuple(verlist)
