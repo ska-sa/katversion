@@ -27,6 +27,7 @@ try:
     from pkg_resources import parse_version, SetuptoolsVersion
 except ImportError:
     parse_version = SetuptoolsVersion = None
+from pkginfo import UnpackedSDist
 
 
 VERSION_FILE = '___version___'
@@ -158,6 +159,15 @@ def get_version_from_module(module):
             pass
 
 
+def get_version_from_unpacked_sdist(path):
+    """Assume path points to an unpacked source distribution and get version."""
+    try:
+        return UnpackedSDist(path).version
+    except ValueError:
+        # Could not load path as an unpacked sdist
+        pass
+
+
 def get_version_from_file(path):
     """Find the VERSION_FILE and return its contents.
 
@@ -256,6 +266,11 @@ def get_version(path=None, module=None):
         path = os.path.dirname(path)
     if not os.path.isdir(path):
         raise ValueError('No such package source directory: %r' % (path,))
+
+    # Check for an sdist in the process of being installed by pip.
+    version = get_version_from_unpacked_sdist(path)
+    if version:
+        return normalised(version)
 
     # Check the SCM.
     scm, version = get_version_from_scm(path)
