@@ -1,3 +1,19 @@
+################################################################################
+# Copyright (c) 2014-2016, National Research Foundation (Square Kilometre Array)
+#
+# Licensed under the BSD 3-Clause License (the "License"); you may not use
+# this file except in compliance with the License. You may obtain a copy
+# of the License at
+#
+#   https://opensource.org/licenses/BSD-3-Clause
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
 """Module with functions taking care of proper Python package versioning."""
 
 import os
@@ -16,32 +32,31 @@ except ImportError:
 VERSION_FILE = '___version___'
 
 
+def run_cmd(path, *cmd):
+    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE,
+                 universal_newlines=True)
+    res, stderr = proc.communicate()
+    if stderr:
+        raise RuntimeError('###\nCalled process gave error:\n%s\n###' % stderr)
+    return res
+
+
 def is_git(path=None):
     """Return True if this is a git repo."""
     try:
-        (repo_dir, stderr) = Popen(['git', 'rev-parse', '--git-dir'], cwd=path,
-                                   stdout=PIPE, stderr=PIPE).communicate()
+        repo_dir = run_cmd(path, 'git', 'rev-parse', '--git-dir')
         return True if repo_dir else False
-    except OSError:
+    except (OSError, RuntimeError):
         return False
 
 
 def is_svn(path=None):
-    """Return True if this is a svn repo."""
+    """Return True if this is an svn repo."""
     try:
-        (repo_dir, stderr) = Popen(['svn', 'info'], cwd=path,
-                                   stdout=PIPE, stderr=PIPE).communicate()
-        return True if not stderr else False
-    except OSError:
+        repo_dir = run_cmd(path, 'svn', 'info')
+        return True
+    except (OSError, RuntimeError):
         return False
-
-
-def run_cmd(path, *cmd):
-    proc = Popen(cmd, cwd=path, stdout=PIPE, stderr=PIPE)
-    res, stderr = proc.communicate()
-    if stderr:
-        raise Exception('###\nCalled process gave error:\n%s\n###' % stderr)
-    return res
 
 
 def date_version(scm_type=None):

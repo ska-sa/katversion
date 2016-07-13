@@ -9,6 +9,8 @@
 *.o
 *.so
 *.pyc
+build
+dist
  
 # Packages #
 ############
