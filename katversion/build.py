@@ -49,9 +49,12 @@ def patch_init_py(base_dir, name, version):
         # Delete existing repo version checking block in file
         init_file.seek(0)
         init_file.writelines(lines[:begin] + lines[end+1:])
-        # Append new version attribute to ensure it is authoritative
-        init_file.write("\n# Automatically added by katversion\n")
-        init_file.write("__version__ = '{0}'\n".format(version))
+        # Append new version attribute to ensure it is authoritative, but only
+        # if it is not already there (this happens in pip sdist installs)
+        version_cmd = "__version__ = '{0}'\n".format(version)
+        if lines[-1] != version_cmd:
+            init_file.write("\n# Automatically added by katversion\n")
+            init_file.write(version_cmd)
         init_file.truncate()
 
 
