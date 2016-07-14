@@ -61,7 +61,8 @@ Add this to ``setup.py`` (handles installed packages):
             ...
         )
 
-Add this to ``mypackage/__init__.py`` (handles local packages):
+Add this to ``mypackage/__init__.py``, including the comment lines
+(handles local packages):
 
 .. code:: python
 
