@@ -3,13 +3,14 @@ katversion
 
 The *katversion* package provides proper versioning for Python packages as
 dictated by their (git) source repositories. The resulting version string is
-baked into the installed package's __init__.py file for guaranteed traceability.
+baked into the installed package's ``__init__.py`` file for guaranteed
+traceability when imported (no dependency on what pkg_resources thinks!).
 
 Version String Format
 ---------------------
 
 *katversion* generates a version string for your SCM package that
-complies with [PEP 440](https://www.python.org/dev/peps/pep-0440/).
+complies with `PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_.
 It mainly supports git repositories, with a half-hearted attempt at svn support.
 
 The format of our version string is:
