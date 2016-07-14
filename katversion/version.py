@@ -27,6 +27,7 @@ try:
     from pkg_resources import parse_version, SetuptoolsVersion
 except ImportError:
     parse_version = SetuptoolsVersion = None
+from pkginfo import UnpackedSDist
 
 
 VERSION_FILE = '___version___'
@@ -41,7 +42,7 @@ def run_cmd(path, *cmd):
     return res
 
 
-def is_git(path=None):
+def is_git(path):
     """Return True if this is a git repo."""
     try:
         repo_dir = run_cmd(path, 'git', 'rev-parse', '--git-dir')
@@ -50,7 +51,7 @@ def is_git(path=None):
         return False
 
 
-def is_svn(path=None):
+def is_svn(path):
     """Return True if this is an svn repo."""
     try:
         repo_dir = run_cmd(path, 'svn', 'info')
@@ -59,17 +60,17 @@ def is_svn(path=None):
         return False
 
 
-def date_version(scm_type=None):
+def date_version(scm=None):
     """Generate a version string based on the SCM type and the date."""
     dt = str(time.strftime('%Y%m%d%H%M'))
-    if scm_type:
-        version = "0.0+unknown.{0}.{1}".format(scm_type, dt)
+    if scm:
+        version = "0.0+unknown.{0}.{1}".format(scm, dt)
     else:
         version = "0.0+unknown." + dt
     return version
 
 
-def get_git_version(path=None):
+def get_git_version(path):
     """Get the GIT version."""
     # Get name of current branch (or 'HEAD' for a detached HEAD)
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
@@ -116,7 +117,7 @@ def get_git_version(path=None):
     return version
 
 
-def get_svn_version(path=None):
+def get_svn_version(path):
     """Return the version string from svn."""
     # Unimplemented, there is probably code to do this already for SVN
     # if you know where that is place it here please.
@@ -144,7 +145,7 @@ def get_version_from_scm(path=None):
     return None, None
 
 
-def get_version_from_module(module=None):
+def get_version_from_module(module):
     """Use pkg_resources to get version of installed module by name."""
     if module is not None:
         # Setup.py will not pass in a module, but creating __version__ from
@@ -158,22 +159,26 @@ def get_version_from_module(module=None):
             pass
 
 
-def get_version_from_file(path=None):
+def get_version_from_unpacked_sdist(path):
+    """Assume path points to an unpacked source distribution and get version."""
+    try:
+        return UnpackedSDist(path).version
+    except ValueError:
+        # Could not load path as an unpacked sdist
+        pass
+
+
+def get_version_from_file(path):
     """Find the VERSION_FILE and return its contents.
 
     Returns
     -------
-    version: String or None
+    version : string or None
 
     """
-    # Get version from katversion file.
-    if path is None:
-        path = os.getcwd()
-
-    version = ''
     filename = os.path.join(path, VERSION_FILE)
     if not os.path.isfile(filename):
-        # Look in one directory down.
+        # Look in the parent directory of path instead.
         filename = os.path.join(os.path.dirname(path), VERSION_FILE)
         if not os.path.isfile(filename):
             filename = ''
@@ -205,7 +210,7 @@ def normalised(version):
         return public + sep + local
 
 
-def get_version(filename=None, module=None):
+def get_version(path=None, module=None):
     """Return the version string.
 
     This function ensures that the version string complies with PEP 440.
@@ -235,10 +240,12 @@ def get_version(filename=None, module=None):
 
     Parameters
     ----------
-    filename: None or string, optional
-        A file or directory to use to find the SCM checkout path
-    module: None or string, optional
-        Get version via module name (e.g. __name__ variable)
+    path : None or string, optional
+        A file or directory to use to find the SCM or sdist checkout path
+        (default is the current working directory)
+    module : None or string, optional
+        Get version via module name (e.g. __name__ variable), which takes
+        precedence over path if provided (ignore otherwise)
 
     Returns
     -------
@@ -246,28 +253,31 @@ def get_version(filename=None, module=None):
         A string representation of the package version
 
     """
-    # Check the module.
+    # Check the module option first.
     version = get_version_from_module(module)
     if version:
         return normalised(version)
 
-    path = ''
-    if filename:
-        filename = os.path.abspath(filename)
-    if filename and os.path.exists(filename):
-        if os.path.isdir(filename):
-            path = filename
-        else:
-            path = os.path.dirname(filename)
+    # Turn path into a valid directory (default is current directory)
+    if path is None:
+        path = os.getcwd()
+    path = os.path.abspath(path)
+    if os.path.exists(path) and not os.path.isdir(path):
+        path = os.path.dirname(path)
+    if not os.path.isdir(path):
+        raise ValueError('No such package source directory: %r' % (path,))
 
-    if not path or not os.path.isdir(path):
-        path = None
+    # Check for an sdist in the process of being installed by pip.
+    version = get_version_from_unpacked_sdist(path)
+    if version:
+        return normalised(version)
+
     # Check the SCM.
     scm, version = get_version_from_scm(path)
     if version:
         return normalised(version)
 
-    # Check if there is a katversion file.
+    # Check if there is a katversion file in the given path.
     version = get_version_from_file(path)
     if version:
         return normalised(version)
@@ -315,7 +325,7 @@ def _sane_version_list(version):
     return version
 
 
-def get_version_list(filename=None, module=None):
+def get_version_list(path=None, module=None):
     """Return the version information as a tuple.
 
     This uses get_version and breaks the string up. Would make more sense if
@@ -325,7 +335,7 @@ def get_version_list(filename=None, module=None):
     major = 0
     minor = 0
     patch = ''  # PEP440 calls this prerelease, postrelease or devrelease
-    ver = get_version(filename, module)
+    ver = get_version(path, module)
     if ver is not None:
         ver_segments = _sane_version_list(ver.split(".", 2))
         major = ver_segments[0]
@@ -336,8 +346,8 @@ def get_version_list(filename=None, module=None):
     return [None, major, minor, patch]
 
 
-def build_info(name, filename=None, module=None):
+def build_info(name, path=None, module=None):
     """Return the build info tuple."""
-    verlist = get_version_list(filename=filename, module=module)
+    verlist = get_version_list(path, module)
     verlist[0] = name
     return tuple(verlist)
