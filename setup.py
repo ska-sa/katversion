@@ -32,7 +32,7 @@ with open('README.rst') as readme:
     long_description = readme.read()
 
 setup(name="katversion",
-      description="Provides proper versioning for Python packages",
+      description="Reliable git-based versioning for Python packages",
       long_description=long_description,
       author="The MeerKAT CAM Team",
       author_email="cam@ska.ac.za",

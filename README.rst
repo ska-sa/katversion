@@ -1,13 +1,16 @@
 katversion
 ==========
 
-Provides proper versioning for Python packages.
+The *katversion* package provides proper versioning for Python packages as
+dictated by their (git) source repositories. The resulting version string is
+baked into the installed package's __init__.py file for guaranteed traceability.
 
-Versioning
-----------
+Version String Format
+---------------------
 
 *katversion* generates a version string for your SCM package that
-complies with [PEP 440] (http://legacy.python.org/dev/peps/pep-0440/).
+complies with [PEP 440](https://www.python.org/dev/peps/pep-0440/).
+It mainly supports git repositories, with a half-hearted attempt at svn support.
 
 The format of our version string is:
 
@@ -41,7 +44,10 @@ The format of our version string is:
 
         $ git tag -a 1.2 -m 'Release version 1.2'
 
-Typical usage in ``setup.py`` (handles installed packages):
+Typical Usage
+-------------
+
+Add this to ``setup.py`` (handles installed packages):
 
 .. code:: python
 
@@ -54,7 +60,7 @@ Typical usage in ``setup.py`` (handles installed packages):
             ...
         )
 
-Typical usage in ``mypackage/__init__.py`` (handles local packages):
+Add this to ``mypackage/__init__.py`` (handles local packages):
 
 .. code:: python
 
@@ -69,7 +75,7 @@ Typical usage in ``mypackage/__init__.py`` (handles local packages):
             __version__ = _katversion.get_version(__path__[0])
         # END VERSION CHECK
 
-Typical usage from command line:
+In addition, a command-line script for checking the version:
 
 ::
 
