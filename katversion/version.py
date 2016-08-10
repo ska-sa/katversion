@@ -71,7 +71,7 @@ def date_version(scm=None):
 
 
 def get_git_cleaned_branch_name(path):
-    """Get the git branch name of the curret HEAD in path. The branch name is
+    """Get the git branch name of the current HEAD in path. The branch name is
     scrubbed to conform to PEP-440.
 
     PEP-440 Local version identifiers shall only consist out of:
