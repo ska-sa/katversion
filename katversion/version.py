@@ -54,7 +54,7 @@ def is_git(path):
 def is_svn(path):
     """Return True if this is an svn repo."""
     try:
-        repo_dir = run_cmd(path, 'svn', 'info')
+        run_cmd(path, 'svn', 'info')
         return True
     except (OSError, RuntimeError):
         return False
@@ -70,11 +70,30 @@ def date_version(scm=None):
     return version
 
 
-def get_git_version(path):
-    """Get the GIT version."""
+def get_git_cleaned_branch_name(path):
+    """Get the git branch name of the current HEAD in path. The branch name is
+    scrubbed to conform to PEP-440.
+
+    PEP-440 Local version identifiers shall only consist out of:
+    - ASCII letters ( [a-zA-Z] )
+    - ASCII digits ( [0-9] )
+    - periods ( . )
+    https://www.python.org/dev/peps/pep-0440/#local-version-identifiers
+
+    Parameters
+    ----------
+    path: str
+        The path to run git commands in.
+    """
     # Get name of current branch (or 'HEAD' for a detached HEAD)
     branch_name = run_cmd(path, 'git', 'rev-parse', '--abbrev-ref', 'HEAD')
-    branch_name = branch_name.strip()
+    branch_name = re.sub(r"[^A-Za-z0-9]+", ".", branch_name.strip())
+    return branch_name
+
+
+def get_git_version(path):
+    """Get the GIT version."""
+    branch_name = get_git_cleaned_branch_name(path)
     # Determine whether working copy is dirty (i.e. contains modified files)
     mods = run_cmd(path, 'git', 'status', '--porcelain', '--untracked-files=no')
     dirty = '.dirty' if mods else ''
@@ -87,6 +106,7 @@ def get_git_version(path):
     short_commit_name = commits[0].partition(' ')[0]
     # A valid version is a sequence of dotted numbers optionally prefixed by 'v'
     valid_version = re.compile(r'^v?([\.\d]+)$')
+
     def tagged_version(commit):
         """First tag on commit that is valid version, as a list of numbers."""
         refs = commit.partition(' ')[2]
