@@ -20,6 +20,11 @@ import os
 import time
 import re
 from subprocess import Popen, PIPE
+from email.parser import Parser
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import pkg_resources  # part of setuptools
 try:
@@ -27,7 +32,6 @@ try:
     from pkg_resources import parse_version, SetuptoolsVersion
 except ImportError:
     parse_version = SetuptoolsVersion = None
-from pkginfo import UnpackedSDist
 
 
 VERSION_FILE = '___version___'
@@ -179,13 +183,30 @@ def get_version_from_module(module):
             pass
 
 
+def _must_decode(value):
+    """Copied from pkginfo 1.4.1, _compat module."""
+    if type(value) is bytes:
+        try:
+            return value.decode('utf-8')
+        except UnicodeDecodeError:
+            return value.decode('latin1')
+    return value
+
+
 def get_version_from_unpacked_sdist(path):
     """Assume path points to an unpacked source distribution and get version."""
+    # This is a condensed version of the relevant code in pkginfo 1.4.1
     try:
-        return UnpackedSDist(path).version
-    except ValueError:
+        with open(os.path.join(path, 'PKG-INFO')) as f:
+            data = f.read()
+    except Exception as e:
         # Could not load path as an unpacked sdist
-        pass
+        return
+    fp = StringIO(_must_decode(data))
+    msg = Parser().parse(fp)
+    value = msg.get('Version')
+    if value != 'UNKNOWN':
+        return value
 
 
 def get_version_from_file(path):
