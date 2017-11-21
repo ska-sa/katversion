@@ -199,8 +199,8 @@ def get_version_from_unpacked_sdist(path):
     try:
         with open(os.path.join(path, 'PKG-INFO')) as f:
             data = f.read()
-    except Exception as e:
-        # Could not load path as an unpacked sdist
+    except IOError:
+        # Could not load path as an unpacked sdist as it had no PKG-INFO file
         return
     fp = StringIO(_must_decode(data))
     msg = Parser().parse(fp)
