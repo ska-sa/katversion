@@ -35,6 +35,7 @@ except ImportError:
 
 
 VERSION_FILE = '___version___'
+NON_ALPHANUMERIC = re.compile('[^a-z0-9]')
 
 
 def run_cmd(path, *cmd):
@@ -243,11 +244,8 @@ def normalised(version):
         if len(public) >= 2:
             if public[0] == 'v' and public[1] in '0123456789':
                 public = public[1:]
-        # Turn all characters except alphanumerics into periods in local version
-        alphanum_or_period = ['.'] * 256
-        for c in 'abcdefghijklmnopqrstuvwxyz0123456789':
-            alphanum_or_period[ord(c)] = c
-        local = local.translate(''.join(alphanum_or_period))
+        # Turn all chars except alphanumerics into periods in local version
+        local = NON_ALPHANUMERIC.sub('.', local)
         return public + sep + local
 
 
