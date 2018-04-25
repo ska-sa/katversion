@@ -27,11 +27,6 @@ except ImportError:
     from io import StringIO
 
 import pkg_resources  # part of setuptools
-try:
-    # This requires setuptools >= 12
-    from pkg_resources import parse_version, SetuptoolsVersion
-except ImportError:
-    parse_version = SetuptoolsVersion = None
 
 
 VERSION_FILE = '___version___'
@@ -234,11 +229,12 @@ def get_version_from_file(path):
 
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
-    if parse_version:
-        # Let setuptools (>= 12) do the normalisation
-        return str(parse_version(version))
+    norm_version = pkg_resources.parse_version(version)
+    if not isinstance(norm_version, tuple):
+        # Let setuptools (>= 8) do the normalisation
+        return str(norm_version)
     else:
-        # Homegrown normalisation for older setuptools (< 12)
+        # Homegrown normalisation for older setuptools (< 8)
         public, sep, local = version.lower().partition('+')
         # Remove leading 'v' from public version
         if len(public) >= 2:
