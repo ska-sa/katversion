@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2014-2016, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2018, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -104,7 +104,7 @@ def get_git_version(path):
     num_commits_since_branch = len(commits)
     # Short hash of the latest commit
     short_commit_name = commits[0].partition(' ')[0]
-    # A valid version is a sequence of dotted numbers optionally prefixed by 'v'
+    # A valid version is sequence of dotted numbers optionally prefixed by 'v'
     valid_version = re.compile(r'^v?([\.\d]+)$')
 
     def tagged_version(commit):
@@ -124,7 +124,7 @@ def get_git_version(path):
             break
     else:
         version_numbers = [0, 0]
-    # It is a release if the current commit has a version tag (and dir is clean)
+    # It is a release if current commit has a version tag (and dir is clean)
     release = (commit == commits[0]) and not dirty
     if not release:
         # We are working towards the next (minor) release according to PEP 440
@@ -190,7 +190,7 @@ def _must_decode(value):
 
 
 def get_version_from_unpacked_sdist(path):
-    """Assume path points to an unpacked source distribution and get version."""
+    """Assume path points to unpacked source distribution and get version."""
     # This is a condensed version of the relevant code in pkginfo 1.4.1
     try:
         with open(os.path.join(path, 'PKG-INFO')) as f:

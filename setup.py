@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ################################################################################
-# Copyright (c) 2014-2016, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2018, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -50,6 +50,7 @@ setup(name="katversion",
           "Programming Language :: Python :: 3.3",
           "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
           "Topic :: Software Development :: Version Control",
           "Topic :: System :: Software Distribution",
           "Topic :: Software Development :: Libraries :: Python Modules"],
