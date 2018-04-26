@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2014-2016, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2018, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -27,14 +27,10 @@ except ImportError:
     from io import StringIO
 
 import pkg_resources  # part of setuptools
-try:
-    # This requires setuptools >= 12
-    from pkg_resources import parse_version, SetuptoolsVersion
-except ImportError:
-    parse_version = SetuptoolsVersion = None
 
 
 VERSION_FILE = '___version___'
+NON_ALPHANUMERIC = re.compile('[^a-z0-9]')
 
 
 def run_cmd(path, *cmd):
@@ -108,7 +104,7 @@ def get_git_version(path):
     num_commits_since_branch = len(commits)
     # Short hash of the latest commit
     short_commit_name = commits[0].partition(' ')[0]
-    # A valid version is a sequence of dotted numbers optionally prefixed by 'v'
+    # A valid version is sequence of dotted numbers optionally prefixed by 'v'
     valid_version = re.compile(r'^v?([\.\d]+)$')
 
     def tagged_version(commit):
@@ -128,7 +124,7 @@ def get_git_version(path):
             break
     else:
         version_numbers = [0, 0]
-    # It is a release if the current commit has a version tag (and dir is clean)
+    # It is a release if current commit has a version tag (and dir is clean)
     release = (commit == commits[0]) and not dirty
     if not release:
         # We are working towards the next (minor) release according to PEP 440
@@ -194,7 +190,7 @@ def _must_decode(value):
 
 
 def get_version_from_unpacked_sdist(path):
-    """Assume path points to an unpacked source distribution and get version."""
+    """Assume path points to unpacked source distribution and get version."""
     # This is a condensed version of the relevant code in pkginfo 1.4.1
     try:
         with open(os.path.join(path, 'PKG-INFO')) as f:
@@ -233,21 +229,19 @@ def get_version_from_file(path):
 
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
-    if parse_version:
-        # Let setuptools (>= 12) do the normalisation
-        return str(parse_version(version))
+    norm_version = pkg_resources.parse_version(version)
+    if not isinstance(norm_version, tuple):
+        # Let setuptools (>= 8) do the normalisation
+        return str(norm_version)
     else:
-        # Homegrown normalisation for older setuptools (< 12)
+        # Homegrown normalisation for older setuptools (< 8)
         public, sep, local = version.lower().partition('+')
         # Remove leading 'v' from public version
         if len(public) >= 2:
             if public[0] == 'v' and public[1] in '0123456789':
                 public = public[1:]
-        # Turn all characters except alphanumerics into periods in local version
-        alphanum_or_period = ['.'] * 256
-        for c in 'abcdefghijklmnopqrstuvwxyz0123456789':
-            alphanum_or_period[ord(c)] = c
-        local = local.translate(''.join(alphanum_or_period))
+        # Turn all chars except alphanumerics into periods in local version
+        local = NON_ALPHANUMERIC.sub('.', local)
         return public + sep + local
 
 
