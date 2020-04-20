@@ -29,10 +29,9 @@ else:
 from .version import get_version
 
 
-def patch_init_py(base_dir, name, version):
+def patch_init_py(package_dir, version):
     """Patch __init__.py to remove version check and append hard-coded version."""
     # Ensure main package dir is there (may be absent in script-only packages)
-    package_dir = os.path.join(base_dir, name)
     if not os.path.isdir(package_dir):
         os.makedirs(package_dir)
     # Open top-level __init__.py and read whole file
@@ -69,11 +68,11 @@ class AddVersionToInitBuildPy(NewStyleDistUtilsBuildPy):
     def run(self):
         # First do normal build (via super, so this can call custom builds too)
         super(NewStyleDistUtilsBuildPy, self).run()
-        # Obtain package name and version (set up via setuptools metadata)
-        name = self.distribution.get_name()
+        # Obtain distribution package version (set up via setuptools metadata)
         version = self.distribution.get_version()
-        # Patch (or create) top-level __init__.py
-        patch_init_py(self.build_lib, name, version)
+        # Patch (or create) top-level __init__.py in all import packages
+        for package, _, build_dir, _ in self.data_files:
+            patch_init_py(build_dir, version)
 
 
 class NewStyleSdist(OriginalSdist, object):
@@ -87,16 +86,20 @@ class AddVersionToInitSdist(NewStyleSdist):
     def make_release_tree(self, base_dir, files):
         # First do normal sdist (via super, so this can call custom sdists too)
         super(NewStyleSdist, self).make_release_tree(base_dir, files)
-        # Obtain package name and version (set up via setuptools metadata)
-        name = self.distribution.get_name()
+        # Obtain distribution package version (set up via setuptools metadata)
         version = self.distribution.get_version()
-        # Ensure __init__.py is not hard-linked so that we don't change source
-        dest = os.path.join(base_dir, name, '__init__.py')
-        if hasattr(os, 'link') and os.path.exists(dest):
-            os.unlink(dest)
-            self.copy_file(os.path.join(name, '__init__.py'), dest)
-        # Patch (or create) top-level __init__.py
-        patch_init_py(base_dir, name, version)
+        # We need build_py command for this as sdist is unaware of import packages
+        build_py = self.get_finalized_command('build_py')
+        # Patch __init__.py in source directories of all import packages
+        for package, input_src_dir, _, _ in build_py.data_files:
+            output_src_dir = os.path.join(base_dir, input_src_dir)
+            # Ensure __init__.py is not hard-linked so that we don't change source
+            dest = os.path.join(output_src_dir, '__init__.py')
+            if hasattr(os, 'link') and os.path.exists(dest):
+                os.unlink(dest)
+                self.copy_file(os.path.join(input_src_dir, '__init__.py'), dest)
+            # Patch (or create) top-level __init__.py
+            patch_init_py(output_src_dir, version)
 
 
 def setuptools_entry(dist, keyword, value):
