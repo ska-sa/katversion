@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ################################################################################
-# Copyright (c) 2014-2018, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2020, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -38,7 +38,7 @@ setup(name="katversion",
       url='https://github.com/ska-sa/katversion',
       license="BSD",
       classifiers=[
-          "Development Status :: 4 - Beta",
+          "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: BSD License",
           "Operating System :: OS Independent",
@@ -51,6 +51,8 @@ setup(name="katversion",
           "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: 3.5",
           "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "Programming Language :: Python :: 3.8",
           "Topic :: Software Development :: Version Control",
           "Topic :: System :: Software Distribution",
           "Topic :: Software Development :: Libraries :: Python Modules"],
@@ -63,6 +65,7 @@ setup(name="katversion",
       version=get_version(),
       cmdclass={'build_py': AddVersionToInitBuildPy,
                 'sdist': AddVersionToInitSdist},
+      python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*, <4',
       tests_require=["unittest2>=0.5.1",
                      "nose>=1.3, <2.0"],
       zip_safe=False,

@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2014-2018, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2020, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -14,7 +14,7 @@
 # limitations under the License.
 ################################################################################
 
-from .version import get_version, build_info
+from .version import get_version, build_info  # noqa: F401 (used in other packages)
 
 # BEGIN VERSION CHECK
 # Get package version when locally imported from repo or via -e develop install
