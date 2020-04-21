@@ -56,6 +56,7 @@ Add this to ``setup.py`` (handles installed packages):
 
         setup(
             ...,
+            # version=1.0,  # remove the version parameter as it will be overridden
             setup_requires=['katversion'],
             use_katversion=True,
             ...
