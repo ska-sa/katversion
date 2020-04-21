@@ -26,7 +26,7 @@ if "setuptools" in sys.modules:
 else:
     from distutils.command.sdist import log, sdist as OriginalSdist
 
-from .version import get_version
+from .version import get_version  # noqa: E402 (confused by if-statement above)
 
 
 def patch_init_py(package_dir, version):
@@ -113,13 +113,17 @@ def setuptools_entry(dist, keyword, value):
         s = "Ignoring explicit version='{0}' in setup.py, using '{1}' instead"
         warnings.warn(s.format(dist.metadata.version, version))
     dist.metadata.version = version
+
     # Extend build_py command to bake version string into installed package
     ExistingCustomBuildPy = dist.cmdclass.get('build_py', object)
+
     class KatVersionBuildPy(AddVersionToInitBuildPy, ExistingCustomBuildPy):
         """First perform existing build_py and then bake in version string."""
     dist.cmdclass['build_py'] = KatVersionBuildPy
+
     # Extend sdist command to bake version string into source package
     ExistingCustomSdist = dist.cmdclass.get('sdist', object)
+
     class KatVersionSdist(AddVersionToInitSdist, ExistingCustomSdist):
         """First perform existing sdist and then bake in version string."""
     dist.cmdclass['sdist'] = KatVersionSdist

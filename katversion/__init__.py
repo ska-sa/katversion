@@ -14,7 +14,7 @@
 # limitations under the License.
 ################################################################################
 
-from .version import get_version, build_info
+from .version import get_version, build_info  # noqa: F401 (used in other packages)
 
 # BEGIN VERSION CHECK
 # Get package version when locally imported from repo or via -e develop install
