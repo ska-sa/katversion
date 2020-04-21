@@ -73,7 +73,7 @@ def get_git_cleaned_branch_name(path):
 
     Parameters
     ----------
-    path: str
+    path : string
         The path to run git commands in.
     """
     # Get name of current branch (or 'HEAD' for a detached HEAD)
@@ -268,7 +268,7 @@ def get_version(path=None, module=None):
 
     Returns
     -------
-    version: string
+    version : string
         A string representation of the package version
 
     """
@@ -310,12 +310,12 @@ def _sane_version_list(version):
 
     Parameters
     ----------
-    version: list
+    version : list
         Version components
 
     Returns
     -------
-    version: list
+    version : list
         List of components where first two components has been sanitised
 
     """
