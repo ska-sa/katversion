@@ -51,15 +51,6 @@ def is_git(path):
         return False
 
 
-def is_svn(path):
-    """Return True if this is an svn repo."""
-    try:
-        run_cmd(path, 'svn', 'info')
-        return True
-    except (OSError, RuntimeError):
-        return False
-
-
 def date_version(scm=None):
     """Generate a version string based on the SCM type and the date."""
     dt = str(time.strftime('%Y%m%d%H%M'))
@@ -137,13 +128,6 @@ def get_git_version(path):
     return version
 
 
-def get_svn_version(path):
-    """Return the version string from svn."""
-    # Unimplemented, there is probably code to do this already for SVN
-    # if you know where that is place it here please.
-    return date_version('svn')
-
-
 def get_version_from_scm(path=None):
     """Get the current version string of this package using SCM tool.
 
@@ -154,14 +138,14 @@ def get_version_from_scm(path=None):
 
     Returns
     -------
+    scm : string
+        The SCM type (e.g. 'git')
     version : string
         The version string for this package
 
     """
     if is_git(path):
         return 'git', get_git_version(path)
-    elif is_svn(path):
-        return 'svn', get_svn_version(path)
     return None, None
 
 
@@ -267,7 +251,7 @@ def get_version(path=None, module=None):
         - for UNKNOWN builds:
             0.0+unknown.[<scm_type>.]<date>
           e.g.
-            0.0+unknown.svn.201402031023
+            0.0+unknown.git.201402031023
             0.0+unknown.201602081715
 
     The <major>.<minor> substring for development builds will be that of the

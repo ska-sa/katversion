@@ -9,9 +9,9 @@ traceability when imported (no dependency on what pkg_resources thinks!).
 Version String Format
 ---------------------
 
-*katversion* generates a version string for your SCM package that
-complies with `PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_.
-It mainly supports git repositories, with a half-hearted attempt at svn support.
+*katversion* generates a version string for your SCM package that complies with
+`PEP 440 <https://www.python.org/dev/peps/pep-0440/>`_.
+It only supports git repositories.
 
 The format of our version string is:
 
@@ -32,7 +32,7 @@ The format of our version string is:
     - for UNKNOWN builds:
         0.0+unknown.[<scm_type>.]<timestamp>
         e.g.
-        0.0+unknown.svn.201402031023
+        0.0+unknown.git.201402031023
         0.0+unknown.201602081715
 
     where <major>.<minor> is derived from the latest version tag and
