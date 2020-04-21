@@ -32,7 +32,7 @@ from .version import get_version  # noqa: E402 (confused by if-statement above)
 def patch_init_py(init_py, version):
     """Patch __init__.py to remove version check and append hard-coded version."""
     # Open top-level __init__.py and read whole file
-    log.info("patching %s to bake in version '%s'" % (init_py, version))
+    log.info("patching %s to bake in version '%s'", init_py, version)
     with open(init_py, 'r+') as init_file:
         lines = init_file.readlines()
         # Search for sentinels indicating version checking block
