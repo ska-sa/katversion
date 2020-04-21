@@ -29,13 +29,9 @@ else:
 from .version import get_version  # noqa: E402 (confused by if-statement above)
 
 
-def patch_init_py(package_dir, version):
+def patch_init_py(init_py, version):
     """Patch __init__.py to remove version check and append hard-coded version."""
-    # Ensure main package dir is there (may be absent in script-only packages)
-    if not os.path.isdir(package_dir):
-        os.makedirs(package_dir)
     # Open top-level __init__.py and read whole file
-    init_py = os.path.join(package_dir, '__init__.py')
     log.info("patching %s to bake in version '%s'" % (init_py, version))
     with open(init_py, 'r+') as init_file:
         lines = init_file.readlines()
@@ -70,9 +66,10 @@ class AddVersionToInitBuildPy(NewStyleDistUtilsBuildPy):
         super(NewStyleDistUtilsBuildPy, self).run()
         # Obtain distribution package version (set up via setuptools metadata)
         version = self.distribution.get_version()
-        # Patch (or create) top-level __init__.py in all import packages
+        # Patch top-level __init__.py in all import packages
         for package, _, build_dir, _ in self.data_files:
-            patch_init_py(build_dir, version)
+            init_py = os.path.join(build_dir, '__init__.py')
+            patch_init_py(init_py, version)
 
 
 class NewStyleSdist(OriginalSdist, object):
@@ -98,8 +95,8 @@ class AddVersionToInitSdist(NewStyleSdist):
             if hasattr(os, 'link') and os.path.exists(dest):
                 os.unlink(dest)
                 self.copy_file(os.path.join(input_src_dir, '__init__.py'), dest)
-            # Patch (or create) top-level __init__.py
-            patch_init_py(output_src_dir, version)
+            # Patch top-level __init__.py
+            patch_init_py(dest, version)
 
 
 def setuptools_entry(dist, keyword, value):
