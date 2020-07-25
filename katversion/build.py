@@ -41,15 +41,18 @@ def patch_init_py(init_py, version):
             end = lines.index("# END VERSION CHECK\n")
         except ValueError:
             begin = end = len(lines)
-        # Delete existing repo version checking block in file
+        # Delete existing repo version checking block in file. Add a baked-in
+        # version string in its place (or at the end), unless already present
+        # (this happens in pip sdist installs).
         init_file.seek(0)
-        init_file.writelines(lines[:begin] + lines[end+1:])
-        # Append new version attribute to ensure it is authoritative, but only
-        # if it is not already there (this happens in pip sdist installs)
+        pre_lines = lines[:begin]
+        post_lines = lines[end+1:]
+        init_file.writelines(pre_lines)
         version_cmd = "__version__ = '{0}'\n".format(version)
-        if not lines or lines[-1] != version_cmd:
+        if version_cmd not in pre_lines and version_cmd not in post_lines:
             init_file.write("\n# Automatically added by katversion\n")
             init_file.write(version_cmd)
+        init_file.writelines(post_lines)
         init_file.truncate()
 
 
