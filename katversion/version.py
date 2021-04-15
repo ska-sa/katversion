@@ -96,7 +96,7 @@ def get_git_version(path):
     # Short hash of the latest commit
     short_commit_name = commits[0].partition(' ')[0]
     # A valid version is sequence of dotted numbers optionally prefixed by 'v'
-    valid_version = re.compile(r'^v?([\.\d]+)$')
+    valid_version = re.compile(r'^v?(\d[\.\d]*)(.*)$')
 
     def tagged_version(commit):
         """First tag on commit that is valid version, as a list of numbers."""
@@ -106,21 +106,22 @@ def get_git_version(path):
                 tag = ref[5:].lower()
                 found = valid_version.match(tag)
                 if found:
-                    return [int(v) for v in found.group(1).split('.') if v]
-        return []
+                    return [int(v) for v in found.group(1).split('.') if v], found.group(2)
+        return [], ''
     # Walk back along branch and find first valid tagged version (or use 0.0)
     for commit in commits:
-        version_numbers = tagged_version(commit)
+        version_numbers, prerelease = tagged_version(commit)
         if version_numbers:
             break
     else:
         version_numbers = [0, 0]
+        prerelease = ''
     # It is a release if current commit has a version tag (and dir is clean)
     release = (commit == commits[0]) and not dirty
     if not release:
         # We are working towards the next (minor) release according to PEP 440
         version_numbers[-1] += 1
-    version = '.'.join([str(v) for v in version_numbers])
+    version = '.'.join([str(v) for v in version_numbers]) + prerelease
     if not release:
         # Development version contains extra embellishments
         version = ("%s.dev%d+%s.%s%s" % (version, num_commits_since_branch,
