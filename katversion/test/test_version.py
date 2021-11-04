@@ -24,6 +24,7 @@ class TestVersion(unittest.TestCase):
 
     def test_sane_version(self):
         t_ver = {"v0.1.2": [0, 1, '2'],
+                 "v1.0a1": [1, 0, '0a1'],
                  "99.88.dev1234+345.678": [99, 88, "dev1234+345.678"],
                  "foo.bar": [0, 0, "foo", "bar"]}
         for ver, test_verlist in t_ver.items():
