@@ -19,12 +19,14 @@
 import sys
 import os
 import warnings
-from distutils.command.build_py import build_py as DistUtilsBuildPy
-# Ensure we override the correct sdist as setuptools monkey-patches distutils
+# Ensure we override the correct sdist and build_py as setuptools
+# monkey-patches distutils.
 if "setuptools" in sys.modules:
     from setuptools.command.sdist import log, sdist as OriginalSdist
+    from setuptools.command.build_py import build_py as OriginalBuildPy
 else:
     from distutils.command.sdist import log, sdist as OriginalSdist
+    from distutils.command.build_py import build_py as OriginalBuildPy
 
 from .version import get_version  # noqa: E402 (confused by if-statement above)
 
@@ -56,17 +58,17 @@ def patch_init_py(init_py, version):
         init_file.truncate()
 
 
-class NewStyleDistUtilsBuildPy(DistUtilsBuildPy, object):
+class NewStyleBuildPy(OriginalBuildPy, object):
     """Turn old-style distutils class into new-style one to allow extension."""
     def run(self):
-        DistUtilsBuildPy.run(self)
+        OriginalBuildPy.run(self)
 
 
-class AddVersionToInitBuildPy(NewStyleDistUtilsBuildPy):
+class AddVersionToInitBuildPy(NewStyleBuildPy):
     """Distutils build_py command that adds __version__ attr to __init__.py."""
     def run(self):
         # First do normal build (via super, so this can call custom builds too)
-        super(NewStyleDistUtilsBuildPy, self).run()
+        super(NewStyleBuildPy, self).run()
         # Obtain distribution package version (set up via setuptools metadata)
         version = self.distribution.get_version()
         # Patch top-level __init__.py in all import packages
