@@ -19,7 +19,8 @@
 import sys
 import os
 import warnings
-# Ensure we override the correct sdist as setuptools monkey-patches distutils
+# Ensure we override the correct sdist and build_py as setuptools
+# monkey-patches distutils.
 if "setuptools" in sys.modules:
     from setuptools.command.sdist import log, sdist as OriginalSdist
     from setuptools.command.build_py import build_py as OriginalBuildPy
