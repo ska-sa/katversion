@@ -26,8 +26,9 @@ try:
 except ImportError:
     from io import StringIO
 
-import pkg_resources  # part of setuptools
-
+# import pkg_resources  # part of setuptools
+from packaging.version import parse as parse_version
+from importlib import metadata
 
 VERSION_FILE = '___version___'
 NON_ALPHANUMERIC = re.compile('[^a-z0-9]')
@@ -154,14 +155,18 @@ def get_version_from_module(module):
     if module is not None:
         # Setup.py will not pass in a module, but creating __version__ from
         # __init__ will.
-        module = str(module).split('.', 1)[0]
+        module_name = str(module).split('.', 1)[0]
         try:
-            package = pkg_resources.get_distribution(module)
-            return package.version
-        except pkg_resources.DistributionNotFound:
-            # So there you have it the module is not installed.
+            package = import_module(module)
+            return getattr(package, "__version__", None)
+        except ModuleNotFoundError:
             pass
 
+        try:
+            return metadata.version(module_name)
+        except metadata.PackageNotFoundError:
+            # So there you have it the module is not installed.
+            pass
 
 def _must_decode(value):
     """Copied from pkginfo 1.4.1, _compat module."""
@@ -213,7 +218,7 @@ def get_version_from_file(path):
 
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
-    norm_version = pkg_resources.parse_version(version)
+    norm_version = parse_version(version)
     if not isinstance(norm_version, tuple):
         # Let setuptools (>= 8) do the normalisation
         return str(norm_version)
@@ -256,7 +261,7 @@ def get_version(path=None, module=None):
 
     The <major>.<minor> substring for development builds will be that of the
     NEXT (minor) release, in order to allow proper Python version ordering.
-
+importlib
     Parameters
     ----------
     path : None or string, optional
