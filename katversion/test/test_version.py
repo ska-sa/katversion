@@ -28,4 +28,4 @@ class TestVersion(unittest.TestCase):
                  "foo.bar": [0, 0, "foo", "bar"]}
         for ver, test_verlist in t_ver.items():
             verlist = kv._sane_version_list(ver.split(".", 2))
-            self.assertEquals(verlist, test_verlist)
+            self.assertEqual(verlist, test_verlist)
