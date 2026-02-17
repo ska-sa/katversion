@@ -68,7 +68,6 @@ setup(name="katversion",
       python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*, <4',
       install_requires=[
           "packaging",
-          "importlib",
           ],
       tests_require=["unittest2>=0.5.1",
                      "nose>=1.3, <2.0"],
