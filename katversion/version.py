@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2014-2020, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2026, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -26,11 +26,16 @@ try:
 except ImportError:
     from io import StringIO
 
-import pkg_resources  # part of setuptools
+import packaging.version
+try:
+    # Try using the standard library importlib.metadata (Python 3.8+)
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    # Fall back to the importlib-metadata package for older Python versions
+    import importlib_metadata
 
 
 VERSION_FILE = '___version___'
-NON_ALPHANUMERIC = re.compile('[^a-z0-9]')
 
 
 def run_cmd(path, *cmd):
@@ -150,15 +155,14 @@ def get_version_from_scm(path=None):
 
 
 def get_version_from_module(module):
-    """Use pkg_resources to get version of installed module by name."""
+    """Use importlib to get version of installed module by name."""
     if module is not None:
         # Setup.py will not pass in a module, but creating __version__ from
         # __init__ will.
         module = str(module).split('.', 1)[0]
         try:
-            package = pkg_resources.get_distribution(module)
-            return package.version
-        except pkg_resources.DistributionNotFound:
+            return importlib_metadata.version(module)
+        except importlib_metadata.PackageNotFoundError:
             # So there you have it the module is not installed.
             pass
 
@@ -213,20 +217,7 @@ def get_version_from_file(path):
 
 def normalised(version):
     """Normalise a version string according to PEP 440, if possible."""
-    norm_version = pkg_resources.parse_version(version)
-    if not isinstance(norm_version, tuple):
-        # Let setuptools (>= 8) do the normalisation
-        return str(norm_version)
-    else:
-        # Homegrown normalisation for older setuptools (< 8)
-        public, sep, local = version.lower().partition('+')
-        # Remove leading 'v' from public version
-        if len(public) >= 2:
-            if public[0] == 'v' and public[1] in '0123456789':
-                public = public[1:]
-        # Turn all chars except alphanumerics into periods in local version
-        local = NON_ALPHANUMERIC.sub('.', local)
-        return public + sep + local
+    return str(packaging.version.parse(version))
 
 
 def get_version(path=None, module=None):
