@@ -4,7 +4,8 @@ katversion
 The *katversion* package provides proper versioning for Python packages as
 dictated by their (git) source repositories. The resulting version string is
 baked into the installed package's ``__init__.py`` file for guaranteed
-traceability when imported (no dependency on what pkg_resources thinks!).
+traceability when imported (no dependency on what pkg_resources or importlib
+thinks!).
 
 Version String Format
 ---------------------

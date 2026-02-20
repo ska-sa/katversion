@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ################################################################################
-# Copyright (c) 2014-2020, National Research Foundation (Square Kilometre Array)
+# Copyright (c) 2014-2026, National Research Foundation (Square Kilometre Array)
 #
 # Licensed under the BSD 3-Clause License (the "License"); you may not use
 # this file except in compliance with the License. You may obtain a copy
@@ -30,21 +30,20 @@ with open('README.rst') as readme:
 setup(name="katversion",
       description="Reliable git-based versioning for Python packages",
       long_description=long_description,
+      long_description_content_type="text/x-rst",
       author="The MeerKAT CAM Team",
       author_email="cam@ska.ac.za",
       packages=find_packages(),
       include_package_data=True,
       scripts=["scripts/kat-get-version.py"],
       url='https://github.com/ska-sa/katversion',
-      license="BSD",
+      license="BSD-3-Clause",
       classifiers=[
           "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Developers",
-          "License :: OSI Approved :: BSD License",
           "Operating System :: OS Independent",
           "Programming Language :: Python",
           "Programming Language :: Python :: 2",
-          "Programming Language :: Python :: 2.6",
           "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.3",
@@ -53,6 +52,12 @@ setup(name="katversion",
           "Programming Language :: Python :: 3.6",
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: 3.13",
+          "Programming Language :: Python :: 3.14",
           "Topic :: Software Development :: Version Control",
           "Topic :: System :: Software Distribution",
           "Topic :: Software Development :: Libraries :: Python Modules"],
@@ -65,8 +70,13 @@ setup(name="katversion",
       version=get_version(),
       cmdclass={'build_py': AddVersionToInitBuildPy,
                 'sdist': AddVersionToInitSdist},
-      python_requires='>=2.6, !=3.0.*, !=3.1.*, !=3.2.*, <4',
-      tests_require=["unittest2>=0.5.1",
-                     "nose>=1.3, <2.0"],
+      python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4',
+      install_requires=[
+          "packaging",
+          "importlib-metadata; python_version < '3.8'",
+      ],
+      extras_require={
+          "test": ["unittest2>=0.5.1", "nose>=1.3, <2.0"],
+      },
       zip_safe=False,
-      test_suite="nose.collector")
+)
